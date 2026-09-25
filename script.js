@@ -42,6 +42,14 @@
 
   const normalize = (h) => ((Math.round(h) % 360) + 360) % 360;
 
+  function isLight(hex) {
+    const [r, g, b] = [1, 3, 5].map((i) => {
+      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.3;
+  }
+
   function renderSwatches(hue) {
     swatchesEl.innerHTML = "";
     palette.forEach(({ name, offset, s, l }) => {
@@ -51,7 +59,7 @@
       btn.className = "swatch";
       btn.type = "button";
       btn.style.backgroundColor = hex;
-      btn.style.color = l > 65 ? "#111" : "#fff";
+      btn.style.color = isLight(hex) ? "#111" : "#fff";
       btn.setAttribute("aria-label", `${name} ${hex}, click to copy`);
       btn.innerHTML = `<span class="swatch-name">${name}</span><span class="swatch-hex">${hex}</span>`;
       btn.addEventListener("click", () => copy(hex));
