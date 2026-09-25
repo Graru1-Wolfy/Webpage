@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A basic dynamic colors webpage with a live theme generator." />
+  <meta name="theme-color" content="#6d5dfc" />
+  <title>Dynamic Colors</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="Dynamic Colors home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        Dynamic Colors
+      </a>
+
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav id="site-nav" class="site-nav">
+        <a href="#features">Features</a>
+        <a href="#palette">Palette</a>
+        <a href="#about">About</a>
+        <button id="theme-toggle" class="icon-btn" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <span class="icon-sun" aria-hidden="true">&#9728;</span>
+          <span class="icon-moon" aria-hidden="true">&#9790;</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <p class="eyebrow">Live theming with CSS variables</p>
+        <h1>Colors that <span class="gradient-text">move with you</span></h1>
+        <p class="lead">
+          Pick a hue, shuffle a palette, or let it cycle on its own. The whole page
+          updates instantly.
+        </p>
+
+        <div class="controls" role="group" aria-label="Color controls">
+          <label class="hue-control">
+            <span>Hue <output id="hue-value">250</output>&deg;</span>
+            <input id="hue-slider" type="range" min="0" max="359" value="250" />
+          </label>
+          <div class="button-row">
+            <button id="random-btn" class="btn btn-primary">Random color</button>
+            <button id="cycle-btn" class="btn btn-ghost" aria-pressed="false">Auto cycle</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="container">
+        <header class="section-head">
+          <h2>Features</h2>
+          <p>Everything is plain HTML, CSS and JavaScript, ready for GitHub Pages.</p>
+        </header>
+
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">&#127912;</div>
+            <h3>One hue, full theme</h3>
+            <p>Every accent, surface and gradient is derived from a single hue value using HSL.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">&#127763;</div>
+            <h3>Light &amp; dark</h3>
+            <p>Follows your system preference by default, with a manual toggle in the header.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">&#128190;</div>
+            <h3>Remembers you</h3>
+            <p>Your chosen hue and mode are saved locally, so the page looks the same next visit.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">&#128241;</div>
+            <h3>Responsive</h3>
+            <p>A mobile-first layout that adapts from phones to wide desktop screens.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="palette">
+      <div class="container">
+        <header class="section-head">
+          <h2>Current palette</h2>
+          <p>Click any swatch to copy its hex code.</p>
+        </header>
+
+        <div id="swatches" class="swatches" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <div class="container about">
+        <div>
+          <h2>About</h2>
+          <p>
+            This page is a small starter for experimenting with dynamic color on the web.
+            Fork it, change the palette rules in <code>script.js</code>, and publish it with
+            GitHub Pages.
+          </p>
+        </div>
+        <a class="btn btn-primary" href="https://github.com/Graru1-Wolfy/Webpage">View on GitHub</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> Dynamic Colors</p>
+      <a href="#top">Back to top &uarr;</a>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
