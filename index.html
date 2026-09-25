@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dynamic Colors</title>
+    <meta name="description" content="Pick one seed color and watch a full interface palette repaint a standard page layout.">
+    <meta id="theme-color" name="theme-color" content="#F4F2FA">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>
+      try {
+        var saved = JSON.parse(localStorage.getItem("dynamic-colors") || "null");
+        if (saved && saved.theme === "dark") {
+          document.documentElement.dataset.theme = "dark";
+        }
+      } catch (error) {
+        /* Ignore storage failures and keep the default theme. */
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="logo" href="#top">
+          <span class="logo-mark" aria-hidden="true"></span>
+          Dynamic Colors
+        </a>
+        <nav class="site-nav" aria-label="Page">
+          <a href="#palette">Palette</a>
+          <a href="#preview">Preview</a>
+          <a href="#tokens">Tokens</a>
+        </nav>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false">Dark mode</button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero wrap" id="top">
+        <div class="hero-copy">
+          <p class="kicker">Live color system</p>
+          <h1>One hue paints the whole page.</h1>
+          <p class="lede">Choose a seed color and a harmony. Surfaces, text, and controls update together so you can judge the system inside a standard layout.</p>
+          <div class="controls">
+            <label class="seed-field">
+              <span class="sr-only">Seed color</span>
+              <input id="seed" class="seed-input" type="color" value="#6e56cf">
+              <span>
+                <span class="seed-label">Seed</span>
+                <span class="seed-hex" id="seed-hex">#6E56CF</span>
+              </span>
+            </label>
+            <div class="modes" id="modes" role="radiogroup" aria-label="Color harmony">
+              <button type="button" role="radio" data-mode="analogous" aria-checked="true">Analogous</button>
+              <button type="button" role="radio" data-mode="complementary" aria-checked="false">Complement</button>
+              <button type="button" role="radio" data-mode="triadic" aria-checked="false">Triad</button>
+              <button type="button" role="radio" data-mode="monochrome" aria-checked="false">Mono</button>
+            </div>
+            <button type="button" class="btn btn-primary" id="randomize">Randomize</button>
+          </div>
+          <p class="contrast" id="contrast" aria-live="polite"></p>
+        </div>
+        <div class="specimen" id="specimen" aria-label="Generated roles">
+          <button type="button" class="role wide" data-role="primary" data-copy="#6E56CF">
+            <span class="role-name">Primary</span>
+            <span class="role-hex">#6E56CF</span>
+          </button>
+          <button type="button" class="role" data-role="secondary" data-copy="#6E56CF">
+            <span class="role-name">Secondary</span>
+            <span class="role-hex">#6E56CF</span>
+          </button>
+          <button type="button" class="role" data-role="tertiary" data-copy="#6E56CF">
+            <span class="role-name">Tertiary</span>
+            <span class="role-hex">#6E56CF</span>
+          </button>
+          <button type="button" class="role" data-role="surface" data-copy="#6E56CF">
+            <span class="role-name">Surface</span>
+            <span class="role-hex">#6E56CF</span>
+          </button>
+          <button type="button" class="role" data-role="background" data-copy="#6E56CF">
+            <span class="role-name">Background</span>
+            <span class="role-hex">#6E56CF</span>
+          </button>
+          <button type="button" class="role" data-role="ink" data-copy="#6E56CF">
+            <span class="role-name">Text</span>
+            <span class="role-hex">#6E56CF</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="band" id="palette">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>Hue ramp</h2>
+            <p>Ten steps of the seed hue, from near-white to near-black. Select a step to copy its hex value.</p>
+          </div>
+          <div class="scale" id="scale" aria-label="Hue ramp"></div>
+        </div>
+      </section>
+
+      <section class="wrap preview-section" id="preview">
+        <div class="section-head">
+          <h2>In a layout</h2>
+          <p>Navigation, summary cards, and actions share the same tokens. Change the seed and this frame repaints with the page.</p>
+        </div>
+        <div class="app-frame">
+          <aside class="app-side">
+            <p class="app-brand">Fieldnote</p>
+            <nav class="app-nav" aria-label="Sample">
+              <a class="is-active" href="#preview">Overview</a>
+              <a href="#palette">Palette</a>
+              <a href="#tokens">Library</a>
+            </nav>
+            <p class="app-note">Tokens stay in sync with the seed selected above.</p>
+          </aside>
+          <div class="app-main">
+            <div class="app-toolbar">
+              <div>
+                <h3>Overview</h3>
+                <p>A compact view of the active system.</p>
+              </div>
+              <button type="button" class="btn btn-primary">New swatch</button>
+            </div>
+            <div class="metrics">
+              <article>
+                <span>Roles</span>
+                <strong>6</strong>
+              </article>
+              <article>
+                <span>Ramp steps</span>
+                <strong>10</strong>
+              </article>
+              <article>
+                <span>Harmonies</span>
+                <strong>4</strong>
+              </article>
+            </div>
+            <form class="sample-form" action="#preview">
+              <label>
+                Collection name
+                <input type="text" value="Spring system" readonly>
+              </label>
+              <div class="form-actions">
+                <button type="button" class="btn btn-secondary">Publish</button>
+                <button type="button" class="btn btn-ghost">Discard</button>
+                <span class="pill">Draft</span>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" id="tokens">
+        <div class="wrap tokens">
+          <div class="section-head">
+            <h2>CSS variables</h2>
+            <p>Copy the custom properties for the current system and use them as the base of another stylesheet.</p>
+          </div>
+          <div class="code-panel">
+            <button type="button" class="btn btn-ghost" id="copy-tokens">Copy CSS</button>
+            <pre id="token-code" tabindex="0"></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <div>
+          <p class="logo">Dynamic Colors</p>
+          <p class="muted">A static page for GitHub Pages. Open <code>index.html</code> or serve this folder.</p>
+        </div>
+        <div>
+          <p class="footer-label">On this page</p>
+          <a href="#palette">Palette</a>
+          <a href="#preview">Preview</a>
+          <a href="#tokens">Tokens</a>
+        </div>
+        <div>
+          <p class="footer-label">Repository</p>
+          <a href="https://github.com/Graru1-Wolfy/Webpage">Graru1-Wolfy/Webpage</a>
+        </div>
+      </div>
+    </footer>
+    <div class="toast" id="toast" role="status" data-visible="false"></div>
+    <script src="js/color.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
