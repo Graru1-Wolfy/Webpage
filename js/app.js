@@ -157,18 +157,14 @@
   }
 
   function copyText(value, message) {
-    var done = function () {
-      showToast(message);
-    };
+    showToast(message);
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(value).then(done).catch(function () {
+      navigator.clipboard.writeText(value).catch(function () {
         fallbackCopy(value);
-        done();
       });
       return;
     }
     fallbackCopy(value);
-    done();
   }
 
   function fallbackCopy(value) {
