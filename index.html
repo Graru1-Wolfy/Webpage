@@ -6,6 +6,16 @@
   <meta name="description" content="A basic dynamic colors webpage with a live theme generator." />
   <meta name="theme-color" content="#6d5dfc" />
   <title>Dynamic Colors</title>
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var theme = localStorage.getItem("dc-theme") ||
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      var hue = localStorage.getItem("dc-hue");
+      root.setAttribute("data-theme", theme);
+      if (hue !== null) root.style.setProperty("--hue", hue);
+    })();
+  </script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
