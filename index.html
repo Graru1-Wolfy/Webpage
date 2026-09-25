@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chroma — Dynamic Colors</title>
+  <meta name="description" content="Chroma: a dynamic color playground. Generate palettes, explore colors, and build gradients — all in the browser." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#" aria-label="Chroma home">
+        <span class="brand-mark" id="brandMark" aria-hidden="true"></span>
+        <span class="brand-name">Chroma</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#palettes">Palettes</a>
+        <a href="#playground">Playground</a>
+        <a href="#gradients">Gradients</a>
+      </nav>
+      <div class="header-actions">
+        <button id="themeToggle" class="btn btn-ghost" type="button" aria-pressed="false" aria-label="Toggle dark mode">
+          <span class="theme-icon" aria-hidden="true">◐</span>
+          <span class="theme-label">Dark</span>
+        </button>
+        <a class="btn btn-primary btn-sm" href="#palettes">Get started</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-bg" id="heroBg" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <p class="eyebrow"><span class="dot" aria-hidden="true"></span> Dynamic color playground · GitHub Pages ready</p>
+        <h1>Design with color<br />that <em id="heroWord">moves</em> with you.</h1>
+        <p class="lede">Generate harmonious palettes, fine-tune any shade, and export production-ready CSS — no build step, no dependencies.</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary btn-lg" id="heroShuffle" type="button">🎲 Shuffle palette</button>
+          <button class="btn btn-secondary btn-lg" id="heroSurprise" type="button">✨ Surprise me</button>
+        </div>
+        <div class="hero-meta">
+          <span>Press <kbd>Space</kbd> to shuffle</span>
+          <span>·</span>
+          <span>Click any swatch to copy</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Palettes -->
+    <section class="section" id="palettes">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2>Palette generator</h2>
+            <p class="muted">Five harmonious colors, regenerated instantly. Lock the ones you love.</p>
+          </div>
+          <div class="section-actions">
+            <label class="harmony-label" for="harmony">Harmony
+              <select id="harmony">
+                <option value="analogous" selected>Analogous</option>
+                <option value="complementary">Complementary</option>
+                <option value="triadic">Triadic</option>
+                <option value="pastel">Pastel</option>
+                <option value="vivid">Vivid</option>
+                <option value="random">Random</option>
+              </select>
+            </label>
+            <button class="btn btn-primary" id="regenerate" type="button">Regenerate</button>
+          </div>
+        </div>
+
+        <div class="palette" id="palette" role="list" aria-label="Generated color palette"></div>
+
+        <div class="export-bar">
+          <code id="cssVars" class="code-block" aria-live="polite"></code>
+          <button class="btn btn-secondary btn-sm" id="copyVars" type="button">Copy CSS variables</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Playground -->
+    <section class="section section-alt" id="playground">
+      <div class="container grid-2">
+        <div>
+          <h2>Color playground</h2>
+          <p class="muted">Pick a color, then tune it with sliders. Live HEX, RGB, HSL and contrast preview included.</p>
+
+          <div class="controls">
+            <label class="control">
+              <span>Base color <strong id="hexLabel">#6366F1</strong></span>
+              <input type="color" id="baseColor" value="#6366f1" />
+            </label>
+            <label class="control">
+              <span>Hue <output id="hueOut">243°</output></span>
+              <input type="range" id="hue" min="0" max="360" value="243" />
+            </label>
+            <label class="control">
+              <span>Saturation <output id="satOut">83%</output></span>
+              <input type="range" id="sat" min="0" max="100" value="83" />
+            </label>
+            <label class="control">
+              <span>Lightness <output id="lightOut">62%</output></span>
+              <input type="range" id="light" min="5" max="95" value="62" />
+            </label>
+          </div>
+
+          <div class="value-chips" aria-live="polite">
+            <button class="chip" data-copy="hex" type="button" title="Copy HEX"><span>HEX</span><strong id="valHex">#6366F1</strong></button>
+            <button class="chip" data-copy="rgb" type="button" title="Copy RGB"><span>RGB</span><strong id="valRgb">—</strong></button>
+            <button class="chip" data-copy="hsl" type="button" title="Copy HSL"><span>HSL</span><strong id="valHsl">—</strong></button>
+          </div>
+        </div>
+
+        <div class="preview-card">
+          <div class="preview-swatch" id="previewSwatch">
+            <span id="previewHex">#6366F1</span>
+          </div>
+          <div class="shades" id="shades" aria-label="Tint and shade scale"></div>
+          <div class="contrast">
+            <div class="contrast-row"><span>On white</span><strong id="onWhite">—</strong></div>
+            <div class="contrast-row"><span>On black</span><strong id="onBlack">—</strong></div>
+            <p class="muted small" id="contrastNote">WCAG contrast ratios update live.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gradients -->
+    <section class="section" id="gradients">
+      <div class="container grid-2">
+        <div>
+          <h2>Gradient builder</h2>
+          <p class="muted">Blend two colors at any angle and copy the CSS in one click.</p>
+          <div class="controls">
+            <div class="gradient-picks">
+              <label class="control inline">From <input type="color" id="gradA" value="#6366f1" /></label>
+              <label class="control inline">To <input type="color" id="gradB" value="#ec4899" /></label>
+              <button class="btn btn-ghost btn-sm" id="swapGrad" type="button" aria-label="Swap gradient colors">⇄ Swap</button>
+            </div>
+            <label class="control">
+              <span>Angle <output id="angleOut">135°</output></span>
+              <input type="range" id="gradAngle" min="0" max="360" value="135" />
+            </label>
+          </div>
+          <div class="export-bar">
+            <code id="gradCode" class="code-block"></code>
+            <button class="btn btn-secondary btn-sm" id="copyGrad" type="button">Copy CSS</button>
+          </div>
+        </div>
+        <div class="gradient-preview" id="gradientPreview" role="img" aria-label="Gradient preview"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p><strong>Chroma</strong> · A single-file-friendly dynamic colors page. Deploy straight to GitHub Pages.</p>
+      <p class="muted small">Built with vanilla HTML, CSS &amp; JS · No tracking · MIT licensed</p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
