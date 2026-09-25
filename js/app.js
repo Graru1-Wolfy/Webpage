@@ -21,6 +21,7 @@
   var copyTokens = document.getElementById("copy-tokens");
   var contrastReadout = document.getElementById("contrast");
   var toast = document.getElementById("toast");
+  var copyStatus = document.getElementById("copy-status");
   var themeColor = document.getElementById("theme-color");
 
   seedInput.addEventListener("input", function () {
@@ -180,12 +181,17 @@
   }
 
   function showToast(message) {
+    copyStatus.textContent = message;
     toast.textContent = message;
-    toast.dataset.visible = "true";
+    toast.classList.add("is-visible");
+    toast.style.opacity = "1";
+    toast.style.transform = "translate(-50%, 0)";
     window.clearTimeout(toastTimer);
     toastTimer = window.setTimeout(function () {
-      toast.dataset.visible = "false";
-    }, 1800);
+      toast.classList.remove("is-visible");
+      toast.style.opacity = "0";
+      toast.style.transform = "translate(-50%, 16px)";
+    }, 2200);
   }
 
   function hexShadow(hex, alpha) {
