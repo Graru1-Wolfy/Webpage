@@ -1,11 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>TF2 Hub</title>
-    <meta name="description" content="A fan hub for Team Fortress 2: the nine classes, common modes, and maps.">
-    <meta id="theme-color" name="theme-color" content="#F4F2FA">
+    <meta name="description" content="A fan hub for Team Fortress 2 community servers.">
+    <meta id="theme-color" name="theme-color" content="#14121c">
+    <script>
+      try {
+        var savedTheme = localStorage.getItem("tf2-theme");
+        if (savedTheme === "light" || savedTheme === "dark") {
+          document.documentElement.dataset.theme = savedTheme;
+          document.getElementById("theme-color").setAttribute("content", savedTheme === "dark" ? "#14121c" : "#F4F2FA");
+        }
+      } catch (error) {
+        /* Keep the default dark theme when storage is unavailable. */
+      }
+    </script>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,12 +32,11 @@
           TF2 Hub
         </a>
         <nav class="site-nav" aria-label="Page">
-          <a href="#classes">Classes</a>
-          <a href="#modes">Modes</a>
           <a href="#maps">Maps</a>
           <a href="#community">Servers</a>
           <a href="#links">Links</a>
         </nav>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="true">Light mode</button>
       </div>
     </header>
 
@@ -35,7 +45,7 @@
         <div class="hero-copy">
           <p class="kicker">Unofficial fan hub</p>
           <h1>Team Fortress 2</h1>
-          <p class="lede">Nine mercenaries, two teams, and a pile of hats. Pick a class, skim the modes, and jump to the maps people still queue.</p>
+          <p class="lede">Community servers from Tempus and Jump Academy. Filter by region, latency, map tier, community, rank, and how many people are already playing.</p>
         </div>
         <div class="specimen" aria-hidden="true">
           <div class="role wide team-red">
@@ -50,27 +60,6 @@
             <span class="role-name">Classes</span>
             <span class="role-hex">9</span>
           </div>
-        </div>
-      </section>
-
-      <section class="wrap preview-section" id="classes">
-        <div class="section-head">
-          <h2>Classes</h2>
-          <p>Select a mercenary to see health, speed, and the job they do on a team.</p>
-        </div>
-        <div class="class-layout">
-          <div class="class-grid" id="class-grid"></div>
-          <article class="dossier" id="dossier" aria-live="polite"></article>
-        </div>
-      </section>
-
-      <section class="band" id="modes">
-        <div class="wrap">
-          <div class="section-head">
-            <h2>Modes</h2>
-            <p>The objectives that show up most often on casual servers.</p>
-          </div>
-          <div class="card-grid" id="mode-grid"></div>
         </div>
       </section>
 
@@ -91,14 +80,74 @@
           </div>
           <div class="metrics" id="community-stats"></div>
           <div class="card-grid region-grid" id="region-grid"></div>
-          <div class="modes" id="community-filters" role="toolbar" aria-label="Community categories"></div>
+          <form class="filter-bar" id="server-filters">
+            <label>Region
+              <select name="region" aria-label="Region">
+                <option value="all">All</option>
+                <option>Europe</option>
+                <option>North America</option>
+                <option>Asia</option>
+                <option>Oceania</option>
+                <option>South America</option>
+                <option>Africa</option>
+              </select>
+            </label>
+            <label>Latency
+              <select name="latency" aria-label="Latency">
+                <option value="all">Any</option>
+                <option value="80">Under 80 ms</option>
+                <option value="150">Under 150 ms</option>
+                <option value="250">Under 250 ms</option>
+              </select>
+            </label>
+            <label>Map tier
+              <select name="tier" aria-label="Map tier">
+                <option value="all">Any</option>
+                <option>Beginner</option>
+                <option>Intermediate</option>
+                <option>Advanced</option>
+                <option>Mixed</option>
+              </select>
+            </label>
+            <label>Community
+              <select name="community" aria-label="Community">
+                <option value="all">All</option>
+                <option value="tempus">Tempus</option>
+                <option value="jumpacademy">Jump Academy</option>
+              </select>
+            </label>
+            <label>Rank
+              <select name="rank" aria-label="Rank">
+                <option value="all">Any</option>
+                <option value="open">Open</option>
+                <option value="1000">Top 1000</option>
+                <option value="500">Top 500</option>
+                <option value="200">Top 200</option>
+                <option value="100">Top 100</option>
+                <option value="50">Top 50</option>
+              </select>
+            </label>
+            <label>Top players
+              <select name="players" aria-label="Top players">
+                <option value="all">Any</option>
+                <option value="1">1 or more</option>
+                <option value="5">5 or more</option>
+                <option value="8">8 or more</option>
+              </select>
+            </label>
+          </form>
+          <p class="filter-count" id="filter-count"></p>
           <div class="server-scroll">
             <table class="server-table">
               <thead>
                 <tr>
                   <th>Server</th>
+                  <th>Region</th>
+                  <th>Tier</th>
+                  <th>Rank</th>
                   <th>Map</th>
                   <th>Players</th>
+                  <th>Latency</th>
                   <th>Address</th>
                 </tr>
               </thead>
@@ -131,8 +180,6 @@
         </div>
         <div>
           <p class="footer-label">On this page</p>
-          <a href="#classes">Classes</a>
-          <a href="#modes">Modes</a>
           <a href="#maps">Maps</a>
           <a href="#community">Servers</a>
         </div>

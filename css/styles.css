@@ -810,12 +810,46 @@ code {
   margin: 16px 0;
 }
 
-#community-filters {
-  flex-wrap: wrap;
-  width: fit-content;
-  max-width: 100%;
-  margin-bottom: 14px;
-  border-radius: 20px;
+.filter-bar {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.filter-bar label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.filter-bar select {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.filter-count {
+  margin: 0 0 12px;
+  color: var(--muted);
+}
+
+.empty-row {
+  padding: 28px 14px;
+  color: var(--muted);
+}
+
+@media (max-width: 860px) {
+  .filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .server-scroll {
