@@ -654,11 +654,11 @@ code {
     height: auto;
     min-height: 0;
     flex-wrap: wrap;
-    padding: 10px 0 8px;
+    padding: 4px 0 2px;
   }
 
   :root {
-    --sticky-offset: 148px;
+    --sticky-offset: 108px;
   }
 
   .site-header {
@@ -673,7 +673,7 @@ code {
   .site-nav {
     order: 3;
     width: 100%;
-    margin: 4px 0 0;
+    margin: 2px 0 0;
     gap: 8px;
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -690,8 +690,8 @@ code {
   .site-nav a {
     flex: 0 0 auto;
     scroll-snap-align: start;
-    min-height: 44px;
-    padding: 8px 14px;
+    min-height: 40px;
+    padding: 6px 12px;
     border: 1px solid var(--border);
     border-radius: 999px;
     background: var(--surface-raised);
@@ -1046,7 +1046,7 @@ code {
 
 @media (max-width: 720px) {
   :root {
-    --sticky-offset: 148px;
+    --sticky-offset: 108px;
   }
 
   body {
@@ -1065,12 +1065,17 @@ code {
     width: min(var(--wrap), calc(100% - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)));
   }
 
-  .preview-section {
-    padding: 28px 0 12px;
+  .preview-section,
+  .band {
+    padding: 16px 0 8px;
   }
 
   .section-head {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
+  }
+
+  .jump-files-head {
+    margin-top: 20px;
   }
 
   h2 {
@@ -1082,10 +1087,10 @@ code {
   }
 
   .theme-toggle {
-    min-height: 44px;
+    min-height: 40px;
     display: inline-flex;
     align-items: center;
-    padding: 8px 14px;
+    padding: 6px 12px;
   }
 
   .filter-bar,
@@ -1155,7 +1160,7 @@ code {
     flex: 0 0 auto;
   }
 
-  .server-scroll {
+  #community .server-scroll {
     max-height: none;
     overflow: visible;
     background: transparent;
@@ -1170,7 +1175,7 @@ code {
 
   .server-table tbody {
     display: grid;
-    gap: 10px;
+    gap: 8px;
   }
 
   .server-table thead {
@@ -1180,7 +1185,8 @@ code {
   .server-table tr {
     display: flex;
     flex-direction: column;
-    padding: 14px 14px 8px;
+    gap: 2px;
+    padding: 10px 12px;
     background: var(--surface-raised);
     border: 1px solid var(--border);
     border-radius: 16px;
@@ -1188,13 +1194,38 @@ code {
 
   .server-table td {
     display: grid;
-    grid-template-columns: 6.75rem minmax(0, 1fr);
-    gap: 8px;
-    align-items: start;
-    padding: 7px 0;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: 6px;
+    align-items: baseline;
+    padding: 1px 0;
     border: 0;
-    border-top: 1px solid var(--border);
     overflow-wrap: anywhere;
+  }
+
+  #server-rows tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 12px;
+    row-gap: 2px;
+  }
+
+  #server-rows td,
+  #jump-rows td,
+  #jump-activity-rows td,
+  #jump-rank-rows td {
+    display: block;
+    padding: 0;
+  }
+
+  #server-rows td[data-label="Server"],
+  #server-rows td[data-label="Address"] {
+    grid-column: 1 / -1;
+  }
+
+  #server-rows td::before,
+  .server-table td::before {
+    display: inline;
+    margin: 0 6px 0 0;
   }
 
   #jump-rows td[data-label="Map"],
@@ -1204,7 +1235,7 @@ code {
     order: -1;
     display: block;
     padding-top: 0;
-    padding-bottom: 8px;
+    padding-bottom: 4px;
     border-top: 0;
     font-size: 1.05rem;
     font-weight: 650;
