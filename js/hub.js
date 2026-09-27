@@ -60,9 +60,21 @@
     renderMaps();
   });
 
+  var communityCategory = "tempus";
+  var communityFilters = document.getElementById("community-filters");
+  var serverRows = document.getElementById("server-rows");
+
+  communityFilters.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-category]");
+    if (!button) return;
+    communityCategory = button.getAttribute("data-category");
+    renderCommunity();
+  });
+
   renderClasses();
   renderModes();
   renderMaps();
+  renderCommunity();
 
   function renderClasses() {
     grid.innerHTML = classes.map(function (item) {
@@ -107,6 +119,62 @@
     mapGrid.innerHTML = visible.map(function (map) {
       return '<article class="info-card map-card"><h3>' + map.name + '</h3><p>' + map.mode + '</p></article>';
     }).join("");
+  }
+
+  function renderCommunity() {
+    var overview = ServerData.overview;
+    document.getElementById("community-stats").innerHTML =
+      statCard("Servers online", overview.servers.toLocaleString()) +
+      statCard("Players online", overview.players.toLocaleString()) +
+      statCard("Maps in rotation", overview.maps.toLocaleString());
+
+    document.getElementById("region-grid").innerHTML = overview.regions.map(function (region) {
+      return '<article class="info-card"><h3>' + escapeHtml(region.name) + '</h3><p>' +
+        region.servers.toLocaleString() + ' servers · ' + region.players.toLocaleString() + ' players</p></article>';
+    }).join("");
+
+    var categories = [
+      { id: "tempus", label: "Tempus" },
+      { id: "jumpacademy", label: "Jump Academy" }
+    ];
+    communityFilters.innerHTML = categories.map(function (category) {
+      var count = ServerData[category.id].length;
+      var pressed = category.id === communityCategory;
+      return '<button type="button" data-category="' + category.id + '" aria-pressed="' + pressed + '">' +
+        category.label + ' (' + count + ')</button>';
+    }).join("");
+
+    var rows = ServerData[communityCategory].slice().sort(function (a, b) {
+      var aPlayers = a.online ? a.players || 0 : -1;
+      var bPlayers = b.online ? b.players || 0 : -1;
+      if (bPlayers !== aPlayers) return bPlayers - aPlayers;
+      return a.name.localeCompare(b.name);
+    });
+
+    serverRows.innerHTML = rows.map(function (server) {
+      var players = server.online
+        ? (server.players || 0) + "/" + (server.maxPlayers || "?")
+        : "Offline";
+      var where = server.country ? '<span class="class-role">' + escapeHtml(server.country) + '</span>' : "";
+      return '<tr>' +
+        '<td><strong>' + escapeHtml(server.name) + '</strong>' + where + '</td>' +
+        '<td>' + escapeHtml(server.map || "—") + '</td>' +
+        '<td>' + players + '</td>' +
+        '<td><a href="' + escapeHtml(server.url) + '">' + escapeHtml(server.address) + '</a></td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function statCard(label, value) {
+    return '<article><span>' + label + '</span><strong>' + value + '</strong></article>';
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 
   function unique(list) {

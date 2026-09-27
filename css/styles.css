@@ -800,9 +800,67 @@ code {
   border-radius: 20px;
 }
 
-#map-filters button[aria-pressed="true"] {
+#map-filters button[aria-pressed="true"],
+#community-filters button[aria-pressed="true"] {
   background: var(--primary);
   color: var(--on-primary);
+}
+
+.region-grid {
+  margin: 16px 0;
+}
+
+#community-filters {
+  flex-wrap: wrap;
+  width: fit-content;
+  max-width: 100%;
+  margin-bottom: 14px;
+  border-radius: 20px;
+}
+
+.server-scroll {
+  max-height: 520px;
+  overflow: auto;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.server-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.server-table th,
+.server-table td {
+  padding: 12px 14px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+
+.server-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.server-table a {
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.server-table a:hover {
+  color: var(--primary);
+}
+
+.server-table .class-role {
+  display: block;
 }
 
 .link-list {
