@@ -146,14 +146,14 @@
     serverRows.innerHTML = visible.map(function (server) {
       var players = server.online ? (server.players || 0) + "/" + (server.maxPlayers || "?") : "Offline";
       return "<tr>" +
-        "<td><strong>" + escapeHtml(server.name) + "</strong><span class=\"class-role\">" + escapeHtml(server.communityLabel) + "</span></td>" +
-        "<td>" + escapeHtml(server.region) + "</td>" +
-        "<td>" + escapeHtml(server.tier) + "</td>" +
-        "<td>" + escapeHtml(server.rankLabel) + "</td>" +
-        "<td>" + escapeHtml(server.map || "—") + "</td>" +
-        "<td>" + players + "</td>" +
-        "<td>~" + server.latency + " ms</td>" +
-        '<td><a href="' + escapeHtml(server.url) + '">' + escapeHtml(server.address) + "</a></td>" +
+        '<td data-label="Server"><strong>' + escapeHtml(server.name) + '</strong><span class="class-role">' + escapeHtml(server.communityLabel) + "</span></td>" +
+        '<td data-label="Region">' + escapeHtml(server.region) + "</td>" +
+        '<td data-label="Tier">' + escapeHtml(server.tier) + "</td>" +
+        '<td data-label="Rank">' + escapeHtml(server.rankLabel) + "</td>" +
+        '<td data-label="Map">' + escapeHtml(server.map || "—") + "</td>" +
+        '<td data-label="Players">' + players + "</td>" +
+        '<td data-label="Latency">~' + server.latency + " ms</td>" +
+        '<td data-label="Address"><a href="' + escapeHtml(server.url) + '">' + escapeHtml(server.address) + "</a></td>" +
       "</tr>";
     }).join("");
   }
