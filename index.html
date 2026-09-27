@@ -24,6 +24,7 @@
           <a href="#classes">Classes</a>
           <a href="#modes">Modes</a>
           <a href="#maps">Maps</a>
+          <a href="#community">Servers</a>
           <a href="#links">Links</a>
         </nav>
       </div>
@@ -82,6 +83,31 @@
         <div class="card-grid" id="map-grid"></div>
       </section>
 
+      <section class="band" id="community">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>Community servers</h2>
+            <p>The totals and regions are from <a href="https://www.steamserverbrowser.com/games/team-fortress-2">SteamServerBrowser</a>. Tempus and Jump Academy are community categories. Each address opens that server’s page there.</p>
+          </div>
+          <div class="metrics" id="community-stats"></div>
+          <div class="card-grid region-grid" id="region-grid"></div>
+          <div class="modes" id="community-filters" role="toolbar" aria-label="Community categories"></div>
+          <div class="server-scroll">
+            <table class="server-table">
+              <thead>
+                <tr>
+                  <th>Server</th>
+                  <th>Map</th>
+                  <th>Players</th>
+                  <th>Address</th>
+                </tr>
+              </thead>
+              <tbody id="server-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <section class="band" id="links">
         <div class="wrap tokens">
           <div class="section-head">
@@ -108,6 +134,7 @@
           <a href="#classes">Classes</a>
           <a href="#modes">Modes</a>
           <a href="#maps">Maps</a>
+          <a href="#community">Servers</a>
         </div>
         <div>
           <p class="footer-label">Repository</p>
@@ -115,6 +142,7 @@
         </div>
       </div>
     </footer>
+    <script src="js/servers.js"></script>
     <script src="js/hub.js"></script>
   </body>
 </html>
