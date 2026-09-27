@@ -29,7 +29,12 @@
     "Hong Kong": "Asia",
     Japan: "Asia",
     "South Korea": "Asia",
-    Singapore: "Asia"
+    Singapore: "Asia",
+    Sweden: "Europe",
+    "United Arab Emirates": "Asia",
+    Argentina: "South America",
+    Bahrain: "Asia",
+    "South Africa": "Africa"
   };
 
   var latencyByRegion = {
@@ -57,6 +62,16 @@
   var jumpForm = document.getElementById("jump-filters");
   var jumpRows = document.getElementById("jump-rows");
   var jumpCount = document.getElementById("jump-count");
+  var jumpActivityBar = document.getElementById("jump-activity");
+  var jumpActivityRows = document.getElementById("jump-activity-rows");
+  var jumpActivityCount = document.getElementById("jump-activity-count");
+  var jumpRankBar = document.getElementById("jump-ranks");
+  var jumpRankRows = document.getElementById("jump-rank-rows");
+  var jumpRankCount = document.getElementById("jump-rank-count");
+  var jumpActivity = "map_wrs";
+  var jumpRank = "overall";
+  var classNames = { 3: "Soldier", 4: "Demoman" };
+  var zoneNames = { map: "Map", course: "Course", bonus: "Bonus", trick: "Trick" };
   var servers = [];
   var loadError = "";
   try {
@@ -93,6 +108,22 @@
     });
   }
   if (jumpForm) jumpForm.addEventListener("change", renderJump);
+  if (jumpActivityBar) {
+    jumpActivityBar.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-activity]");
+      if (!button) return;
+      jumpActivity = button.getAttribute("data-activity");
+      renderActivity();
+    });
+  }
+  if (jumpRankBar) {
+    jumpRankBar.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-rank]");
+      if (!button) return;
+      jumpRank = button.getAttribute("data-rank");
+      renderRanks();
+    });
+  }
   if (themeToggle) {
     themeToggle.addEventListener("click", function () {
       var next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
@@ -109,6 +140,8 @@
   renderMaps();
   renderOverview();
   renderJump();
+  renderActivity();
+  renderRanks();
 
   function applyTheme(theme, persist) {
     document.documentElement.dataset.theme = theme;
@@ -187,14 +220,73 @@
     jumpRows.innerHTML = visible.map(function (map) {
       var page = "https://tempus2.xyz/maps/" + encodeURIComponent(map.name);
       var file = "https://static.tempus2.xyz/tempus/server/maps/" + encodeURIComponent(map.name) + ".bsp.bz2";
-      var detail = map.date;
-      if (map.kind !== "rocket") detail = kindLabels[map.kind] + " · " + map.date;
+      var detail = map.authors || map.date || "";
+      if (map.kind !== "rocket") detail = kindLabels[map.kind] + (detail ? " · " + detail : "");
       return "<tr>" +
         '<td data-label="Map"><strong><a href="' + page + '">' + escapeHtml(map.name) + "</a></strong><span class=\"class-role\">" + escapeHtml(detail) + "</span></td>" +
-        '<td data-label="Soldier">' + classLabel(map.s, map.sr) + "</td>" +
-        '<td data-label="Demoman">' + classLabel(map.d, map.dr) + "</td>" +
+        '<td data-label="Soldier">' + classCell(map.s, map.sr, map.sv) + "</td>" +
+        '<td data-label="Demoman">' + classCell(map.d, map.dr, map.dv) + "</td>" +
         '<td data-label="Layout">' + escapeHtml(layoutLabel(map)) + "</td>" +
-        '<td data-label="Download"><a href="' + file + '">' + formatBytes(map.bytes) + "</a></td>" +
+        '<td data-label="Download">' + (map.bytes ? '<a href="' + file + '">' + formatBytes(map.bytes) + "</a>" : "—") + "</td>" +
+      "</tr>";
+    }).join("");
+  }
+
+  function renderActivity() {
+    var groups = typeof JumpData === "undefined" ? null : JumpData.activity;
+    var runs = groups && groups[jumpActivity];
+    Array.prototype.forEach.call(jumpActivityBar.querySelectorAll("[data-activity]"), function (button) {
+      button.setAttribute("aria-pressed", button.getAttribute("data-activity") === jumpActivity ? "true" : "false");
+    });
+    if (!runs) {
+      jumpActivityCount.textContent = "";
+      jumpActivityRows.innerHTML = '<tr><td class="empty-row" colspan="7">Recent records could not be read.</td></tr>';
+      return;
+    }
+    var labels = {
+      map_wrs: "map records",
+      course_wrs: "course records",
+      bonus_wrs: "bonus records",
+      trick_wrs: "trick records",
+      map_tops: "top times"
+    };
+    jumpActivityCount.textContent = runs.length + " " + labels[jumpActivity];
+    jumpActivityRows.innerHTML = runs.map(function (run) {
+      var player = run.playerId
+        ? '<a href="https://tempus2.xyz/players/' + run.playerId + '">' + escapeHtml(run.player) + "</a>"
+        : escapeHtml(run.player);
+      var map = run.map
+        ? '<a href="https://tempus2.xyz/maps/' + encodeURIComponent(run.map) + '">' + escapeHtml(run.map) + "</a>"
+        : "—";
+      return "<tr>" +
+        '<td data-label="Place">' + escapeHtml(run.place === 1 ? "WR" : "#" + run.place) + "</td>" +
+        '<td data-label="Player">' + player + "</td>" +
+        '<td data-label="Map">' + map + "</td>" +
+        '<td data-label="Zone">' + escapeHtml(zoneLabel(run)) + "</td>" +
+        '<td data-label="Class">' + escapeHtml(classNames[run.class] || "—") + "</td>" +
+        '<td data-label="Time">' + escapeHtml(formatDuration(run.time)) + "</td>" +
+        '<td data-label="Date">' + escapeHtml(formatStamp(run.date)) + "</td>" +
+      "</tr>";
+    }).join("");
+  }
+
+  function renderRanks() {
+    var lists = typeof JumpData === "undefined" ? null : JumpData.ranks;
+    var list = lists && lists[jumpRank];
+    Array.prototype.forEach.call(jumpRankBar.querySelectorAll("[data-rank]"), function (button) {
+      button.setAttribute("aria-pressed", button.getAttribute("data-rank") === jumpRank ? "true" : "false");
+    });
+    if (!list) {
+      jumpRankCount.textContent = "";
+      jumpRankRows.innerHTML = '<tr><td class="empty-row" colspan="3">Ranks could not be read.</td></tr>';
+      return;
+    }
+    jumpRankCount.textContent = "Top " + list.players.length + " of " + Number(list.count).toLocaleString() + " players";
+    jumpRankRows.innerHTML = list.players.map(function (player) {
+      return "<tr>" +
+        '<td data-label="Rank">' + escapeHtml(player.rank) + "</td>" +
+        '<td data-label="Player"><a href="https://tempus2.xyz/players/' + player.id + '">' + escapeHtml(player.name) + "</a></td>" +
+        '<td data-label="Points">' + Number(player.points).toLocaleString(undefined, { maximumFractionDigits: 0 }) + "</td>" +
       "</tr>";
     }).join("");
   }
@@ -229,6 +321,34 @@
   function classLabel(tier, rating) {
     if (!tier) return "—";
     return ratings[rating] ? "T" + tier + " · " + ratings[rating] : "T" + tier;
+  }
+
+  function classCell(tier, rating, video) {
+    var text = classLabel(tier, rating);
+    if (!video) return text;
+    return text + ' <a href="https://www.youtube.com/watch?v=' + encodeURIComponent(video) + '">Video</a>';
+  }
+
+  function zoneLabel(run) {
+    var label = zoneNames[run.zone] || "Zone";
+    if (run.zone && run.zone !== "map") label += " " + run.index;
+    if (run.zoneName) label += " · " + run.zoneName;
+    return label;
+  }
+
+  function formatDuration(seconds) {
+    var total = Number(seconds) || 0;
+    var minutes = Math.floor(total / 60);
+    var rest = (total - minutes * 60).toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+    if (minutes && Number(rest) < 10) rest = "0" + rest;
+    return minutes ? minutes + ":" + rest : rest;
+  }
+
+  function formatStamp(unix) {
+    if (!unix) return "—";
+    var date = new Date(unix * 1000);
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return date.getUTCDate() + " " + months[date.getUTCMonth()] + " " + date.getUTCFullYear();
   }
 
   function layoutLabel(map) {
