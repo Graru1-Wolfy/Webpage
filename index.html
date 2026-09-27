@@ -55,7 +55,7 @@
       <section class="wrap preview-section" id="jump">
         <div class="section-head">
           <h2>Jump</h2>
-          <p>Map files from the <a href="https://static.tempus2.xyz/tempus/server/maps/">Tempus static mirror</a>. Tiers and ratings are the Tempus categories for soldier and demoman. Tier 1 is the easiest. Ratings are Good, Decent, Poor, and Bad.</p>
+          <p>Maps, recent records, and ranks from the <a href="https://tempus2.xyz/apidocs/">Tempus API</a>. Tier 1 is the easiest. Ratings are Good, Decent, Poor, and Bad. A download is the map file on the <a href="https://static.tempus2.xyz/tempus/server/maps/">static mirror</a> when that file is hosted there.</p>
         </div>
         <div class="modes" id="jump-class" role="toolbar" aria-label="Class">
           <button type="button" data-class="soldier" aria-pressed="true">Soldier</button>
@@ -107,6 +107,56 @@
           </table>
         </div>
         <div class="section-head jump-files-head">
+          <h3>Recent records</h3>
+          <p>World records and top map times from <a href="https://tempus2.xyz/api/v0/activity">/activity</a>.</p>
+        </div>
+        <div class="modes jump-switch" id="jump-activity" role="toolbar" aria-label="Record type">
+          <button type="button" data-activity="map_wrs" aria-pressed="true">Map records</button>
+          <button type="button" data-activity="course_wrs" aria-pressed="false">Courses</button>
+          <button type="button" data-activity="bonus_wrs" aria-pressed="false">Bonuses</button>
+          <button type="button" data-activity="trick_wrs" aria-pressed="false">Tricks</button>
+          <button type="button" data-activity="map_tops" aria-pressed="false">Top times</button>
+        </div>
+        <p class="filter-count" id="jump-activity-count"></p>
+        <div class="server-scroll">
+          <table class="server-table">
+            <thead>
+              <tr>
+                <th>Place</th>
+                <th>Player</th>
+                <th>Map</th>
+                <th>Zone</th>
+                <th>Class</th>
+                <th>Time</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="jump-activity-rows"></tbody>
+          </table>
+        </div>
+        <div class="section-head jump-files-head">
+          <h3>Ranks</h3>
+          <p>The top 50 players from the Tempus rank lists.</p>
+        </div>
+        <div class="modes jump-switch" id="jump-ranks" role="toolbar" aria-label="Rank list">
+          <button type="button" data-rank="overall" aria-pressed="true">Overall</button>
+          <button type="button" data-rank="soldier" aria-pressed="false">Soldier</button>
+          <button type="button" data-rank="demoman" aria-pressed="false">Demoman</button>
+        </div>
+        <p class="filter-count" id="jump-rank-count"></p>
+        <div class="server-scroll">
+          <table class="server-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Points</th>
+              </tr>
+            </thead>
+            <tbody id="jump-rank-rows"></tbody>
+          </table>
+        </div>
+        <div class="section-head jump-files-head">
           <h3>Server files</h3>
           <p>Current builds from <a href="https://static.tempus2.xyz/public/">static.tempus2.xyz/public</a>.</p>
         </div>
@@ -139,7 +189,7 @@
         <div class="wrap">
           <div class="section-head">
             <h2>Community servers</h2>
-            <p>The totals and regions are from <a href="https://www.steamserverbrowser.com/games/team-fortress-2">SteamServerBrowser</a>. Tempus and Jump Academy are community categories. Each address opens that server’s page there.</p>
+            <p>The totals and regions are from <a href="https://www.steamserverbrowser.com/games/team-fortress-2">SteamServerBrowser</a>. Tempus servers are the public list from the <a href="https://tempus2.xyz/api/v0/servers/statusList">Tempus API</a>. Jump Academy is listed with them. Each address opens that server’s SteamServerBrowser page.</p>
           </div>
           <div class="metrics" id="community-stats"></div>
           <div class="card-grid region-grid" id="region-grid"></div>

@@ -802,6 +802,8 @@ code {
 
 #map-filters button[aria-pressed="true"],
 #jump-class button[aria-pressed="true"],
+#jump-activity button[aria-pressed="true"],
+#jump-ranks button[aria-pressed="true"],
 #community-filters button[aria-pressed="true"] {
   background: var(--primary);
   color: var(--on-primary);
@@ -851,6 +853,12 @@ code {
 
 .jump-filters {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.jump-switch {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 12px;
 }
 
 .jump-files-head {
@@ -1016,7 +1024,9 @@ code {
   }
 
   #map-filters,
-  #jump-class {
+  #jump-class,
+  #jump-activity,
+  #jump-ranks {
     flex-wrap: wrap;
     width: 100%;
     border-radius: 16px;
