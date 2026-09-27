@@ -142,6 +142,41 @@
   renderJump();
   renderActivity();
   renderRanks();
+  trackSection();
+
+  function trackSection() {
+    var links = Array.prototype.slice.call(document.querySelectorAll(".site-nav a"));
+    var sections = links.map(function (link) {
+      return document.getElementById(link.getAttribute("href").slice(1));
+    }).filter(Boolean);
+    if (!sections.length) return;
+    var currentId = "";
+
+    function update() {
+      var header = document.querySelector(".site-header");
+      var marker = (header ? header.getBoundingClientRect().bottom : 80) + 36;
+      var current = sections[0];
+      sections.forEach(function (section) {
+        if (section.getBoundingClientRect().top <= marker) current = section;
+      });
+      if (current.id === currentId) return;
+      currentId = current.id;
+      links.forEach(function (link) {
+        var on = link.getAttribute("href") === "#" + currentId;
+        if (on) link.setAttribute("aria-current", "true");
+        else link.removeAttribute("aria-current");
+        if (!on) return;
+        var nav = link.parentElement;
+        var navRect = nav.getBoundingClientRect();
+        var linkRect = link.getBoundingClientRect();
+        if (linkRect.left < navRect.left) nav.scrollLeft -= navRect.left - linkRect.left;
+        else if (linkRect.right > navRect.right) nav.scrollLeft += linkRect.right - navRect.right;
+      });
+    }
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+  }
 
   function applyTheme(theme, persist) {
     document.documentElement.dataset.theme = theme;
