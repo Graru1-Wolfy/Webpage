@@ -925,9 +925,9 @@ var ServerData = {
       "name": "jumpacademy.tf | Soldier Rotation | S5-D3 | EU",
       "address": "185.107.97.12:27015",
       "map": "jump_bear",
-      "players": null,
-      "maxPlayers": null,
-      "online": false,
+      "players": 6,
+      "maxPlayers": 31,
+      "online": true,
       "category": "jumpacademy",
       "url": "https://www.steamserverbrowser.com/games/team-fortress-2/servers/185.107.97.12:27015"
     },
