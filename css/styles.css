@@ -846,9 +846,117 @@ code {
   color: var(--muted);
 }
 
+.encyclopedia {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(220px, 0.7fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.encyclopedia h3,
+.encyclopedia h4 {
+  margin: 0;
+  font-family: Outfit, "Segoe UI", sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.encyclopedia h3 {
+  margin-bottom: 8px;
+  font-size: 1.35rem;
+}
+
+.encyclopedia h4 {
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.encyclopedia .link-list {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.encyclopedia a {
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 860px) {
-  .filter-bar {
+  .filter-bar,
+  .encyclopedia {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  body {
+    overflow-x: clip;
+  }
+
+  .header-inner {
+    align-items: flex-start;
+  }
+
+  .site-nav {
+    gap: 14px;
+  }
+
+  .site-nav a,
+  .theme-toggle {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .filter-bar,
+  .encyclopedia,
+  .metrics,
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #map-filters {
+    flex-wrap: wrap;
+    width: 100%;
+    border-radius: 16px;
+  }
+
+  .server-scroll {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .server-table thead {
+    display: none;
+  }
+
+  .server-table tr {
+    display: block;
+    padding: 12px 14px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .server-table td {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    padding: 5px 0;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .server-table td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 }
 
