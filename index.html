@@ -1,49 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>TF2 Hub</title>
     <meta name="description" content="A fan hub for Team Fortress 2: the nine classes, common modes, and maps.">
-    <meta name="theme-color" content="#2a2118">
+    <meta id="theme-color" name="theme-color" content="#F4F2FA">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
-    <header class="topbar">
-      <a class="brand" href="#top">TF2 Hub</a>
-      <nav class="nav" aria-label="Page">
-        <a href="#classes">Classes</a>
-        <a href="#modes">Modes</a>
-        <a href="#maps">Maps</a>
-        <a href="#links">Links</a>
-      </nav>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="logo" href="#top">
+          <span class="logo-mark" aria-hidden="true"></span>
+          TF2 Hub
+        </a>
+        <nav class="site-nav" aria-label="Page">
+          <a href="#classes">Classes</a>
+          <a href="#modes">Modes</a>
+          <a href="#maps">Maps</a>
+          <a href="#links">Links</a>
+        </nav>
+      </div>
     </header>
 
     <main id="main">
       <section class="hero wrap" id="top">
-        <div>
+        <div class="hero-copy">
           <p class="kicker">Unofficial fan hub</p>
           <h1>Team Fortress 2</h1>
           <p class="lede">Nine mercenaries, two teams, and a pile of hats. Pick a class, skim the modes, and jump to the maps people still queue.</p>
         </div>
-        <div class="score" aria-hidden="true">
-          <p class="team red"><span>RED</span><strong>0</strong></p>
-          <p class="team blu"><span>BLU</span><strong>0</strong></p>
+        <div class="specimen" aria-hidden="true">
+          <div class="role wide team-red">
+            <span class="role-name">RED</span>
+            <span class="role-hex">0</span>
+          </div>
+          <div class="role team-blu">
+            <span class="role-name">BLU</span>
+            <span class="role-hex">0</span>
+          </div>
+          <div class="role">
+            <span class="role-name">Classes</span>
+            <span class="role-hex">9</span>
+          </div>
         </div>
       </section>
 
-      <section class="wrap" id="classes">
+      <section class="wrap preview-section" id="classes">
         <div class="section-head">
           <h2>Classes</h2>
           <p>Select a mercenary to see health, speed, and the job they do on a team.</p>
         </div>
         <div class="class-layout">
-          <div class="class-grid" id="class-grid" role="list"></div>
+          <div class="class-grid" id="class-grid"></div>
           <article class="dossier" id="dossier" aria-live="polite"></article>
         </div>
       </section>
@@ -58,17 +73,17 @@
         </div>
       </section>
 
-      <section class="wrap" id="maps">
+      <section class="wrap preview-section" id="maps">
         <div class="section-head">
           <h2>Maps</h2>
           <p>A short list of maps that define the game. Filter them by mode.</p>
         </div>
-        <div class="filters" id="map-filters" role="toolbar" aria-label="Filter maps"></div>
+        <div class="modes" id="map-filters" role="toolbar" aria-label="Filter maps"></div>
         <div class="card-grid" id="map-grid"></div>
       </section>
 
       <section class="band" id="links">
-        <div class="wrap">
+        <div class="wrap tokens">
           <div class="section-head">
             <h2>Official links</h2>
             <p>Valve’s own pages for the game, the blog, and the community wiki.</p>
@@ -82,9 +97,22 @@
       </section>
     </main>
 
-    <footer class="footer">
-      <div class="wrap">
-        <p>TF2 Hub is an unofficial fan page. Team Fortress 2 is a trademark of Valve Corporation. This site is not affiliated with or endorsed by Valve.</p>
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <div>
+          <p class="logo">TF2 Hub</p>
+          <p class="muted">Unofficial fan page. Team Fortress 2 is a trademark of Valve Corporation. This site is not affiliated with or endorsed by Valve.</p>
+        </div>
+        <div>
+          <p class="footer-label">On this page</p>
+          <a href="#classes">Classes</a>
+          <a href="#modes">Modes</a>
+          <a href="#maps">Maps</a>
+        </div>
+        <div>
+          <p class="footer-label">Repository</p>
+          <a href="https://github.com/Graru1-Wolfy/Webpage">Graru1-Wolfy/Webpage</a>
+        </div>
       </div>
     </footer>
     <script src="js/hub.js"></script>
