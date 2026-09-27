@@ -33,6 +33,7 @@
         </a>
         <nav class="site-nav" aria-label="Page">
           <a href="#maps">Maps</a>
+          <a href="#jump">Jump</a>
           <a href="#community">Servers</a>
           <a href="#encyclopedia">Encyclopedia</a>
           <a href="#links">Links</a>
@@ -49,6 +50,89 @@
         </div>
         <div class="modes" id="map-filters" role="toolbar" aria-label="Filter maps"></div>
         <div class="card-grid" id="map-grid"></div>
+      </section>
+
+      <section class="wrap preview-section" id="jump">
+        <div class="section-head">
+          <h2>Jump</h2>
+          <p>Map files from the <a href="https://static.tempus2.xyz/tempus/server/maps/">Tempus static mirror</a>. Tiers and ratings are the Tempus categories for soldier and demoman. Tier 1 is the easiest. Ratings are Good, Decent, Poor, and Bad.</p>
+        </div>
+        <div class="modes" id="jump-class" role="toolbar" aria-label="Class">
+          <button type="button" data-class="soldier" aria-pressed="true">Soldier</button>
+          <button type="button" data-class="demoman" aria-pressed="false">Demoman</button>
+        </div>
+        <div class="jump-tiers" id="jump-tiers" role="toolbar" aria-label="Tier"></div>
+        <form class="filter-bar jump-filters" id="jump-filters">
+          <label>Type
+            <select name="type" aria-label="Type">
+              <option value="all">All</option>
+              <option value="rocket">Rocket jump</option>
+              <option value="sticky">Sticky jump</option>
+              <option value="conc">Conc</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>Rating
+            <select name="rating" aria-label="Rating">
+              <option value="all">Any</option>
+              <option value="1">Good</option>
+              <option value="2">Decent</option>
+              <option value="3">Poor</option>
+              <option value="4">Bad</option>
+            </select>
+          </label>
+          <label>Layout
+            <select name="layout" aria-label="Layout">
+              <option value="all">Any</option>
+              <option value="bonus">Bonuses</option>
+              <option value="course">Courses</option>
+              <option value="trick">Tricks</option>
+              <option value="linear">Linear</option>
+            </select>
+          </label>
+        </form>
+        <p class="filter-count" id="jump-count"></p>
+        <div class="server-scroll">
+          <table class="server-table">
+            <thead>
+              <tr>
+                <th>Map</th>
+                <th>Soldier</th>
+                <th>Demoman</th>
+                <th>Layout</th>
+                <th>Download</th>
+              </tr>
+            </thead>
+            <tbody id="jump-rows"></tbody>
+          </table>
+        </div>
+        <div class="section-head jump-files-head">
+          <h3>Server files</h3>
+          <p>Current builds from <a href="https://static.tempus2.xyz/public/">static.tempus2.xyz/public</a>.</p>
+        </div>
+        <div class="jump-files">
+          <section>
+            <h3>Physics</h3>
+            <ul class="link-list">
+              <li><a href="https://static.tempus2.xyz/public/jumpqol_vphysics_linux_006.zip">Jump QoL vphysics, Linux 006</a><span>121 KiB · 22 Apr 2026</span></li>
+              <li><a href="https://static.tempus2.xyz/public/jumpqol_vphysics_002.zip">Jump QoL vphysics 002</a><span>121 KiB · 13 Dec 2025</span></li>
+            </ul>
+          </section>
+          <section>
+            <h3>Collision</h3>
+            <ul class="link-list">
+              <li><a href="https://static.tempus2.xyz/public/collisionhook-3829a5b.zip">Collision hook 3829a5b</a><span>482 KiB · 19 Apr 2024</span></li>
+            </ul>
+          </section>
+          <section>
+            <h3>Plugins</h3>
+            <ul class="link-list">
+              <li><a href="https://static.tempus2.xyz/public/sendvaredit-256dcb5.zip">SendVarEdit 256dcb5</a><span>550 KiB · 19 Apr 2024</span></li>
+              <li><a href="https://static.tempus2.xyz/public/source-python-data.zip">Source Python data</a><span>127 KiB · 17 Apr 2025</span></li>
+              <li><a href="https://static.tempus2.xyz/public/updater.smx">Updater</a><span>22 KiB · 23 Mar 2023</span></li>
+            </ul>
+          </section>
+        </div>
       </section>
 
       <section class="band" id="community">
@@ -238,6 +322,7 @@
         <div>
           <p class="footer-label">On this page</p>
           <a href="#maps">Maps</a>
+          <a href="#jump">Jump</a>
           <a href="#community">Servers</a>
           <a href="#encyclopedia">Encyclopedia</a>
         </div>
@@ -248,6 +333,7 @@
       </div>
     </footer>
     <script src="js/servers.js"></script>
+    <script src="js/jump.js"></script>
     <script src="js/hub.js"></script>
   </body>
 </html>

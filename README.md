@@ -1,6 +1,6 @@
 # TF2 Hub
 
-An unofficial fan page for Team Fortress 2. It lists the nine classes, common game modes, maps, and community servers.
+An unofficial fan page for Team Fortress 2. It lists maps, a jump catalog from the Tempus static mirror, community servers, and a jump encyclopedia.
 
 Community totals come from [SteamServerBrowser](https://www.steamserverbrowser.com/games/team-fortress-2). The Tempus and Jump Academy categories list those networks, and each address links to its SteamServerBrowser page.
 
