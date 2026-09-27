@@ -42,12 +42,21 @@
   };
 
   var mapFilter = "All";
+  var jumpClass = "soldier";
+  var jumpTier = "all";
+  var ratings = { 1: "Good", 2: "Decent", 3: "Poor", 4: "Bad" };
+  var kindLabels = { rocket: "Rocket jump", sticky: "Sticky jump", conc: "Conc", other: "Other" };
   var mapGrid = document.getElementById("map-grid");
   var mapFilters = document.getElementById("map-filters");
   var serverRows = document.getElementById("server-rows");
   var filterForm = document.getElementById("server-filters");
   var filterCount = document.getElementById("filter-count");
   var themeToggle = document.getElementById("theme-toggle");
+  var jumpClassBar = document.getElementById("jump-class");
+  var jumpTierBar = document.getElementById("jump-tiers");
+  var jumpForm = document.getElementById("jump-filters");
+  var jumpRows = document.getElementById("jump-rows");
+  var jumpCount = document.getElementById("jump-count");
   var servers = [];
   var loadError = "";
   try {
@@ -66,6 +75,24 @@
   }
 
   if (filterForm) filterForm.addEventListener("change", renderServers);
+  if (jumpClassBar) {
+    jumpClassBar.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-class]");
+      if (!button) return;
+      jumpClass = button.getAttribute("data-class");
+      renderJump();
+    });
+  }
+  if (jumpTierBar) {
+    jumpTierBar.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-tier]");
+      if (!button) return;
+      var next = button.getAttribute("data-tier");
+      jumpTier = jumpTier === next ? "all" : next;
+      renderJump();
+    });
+  }
+  if (jumpForm) jumpForm.addEventListener("change", renderJump);
   if (themeToggle) {
     themeToggle.addEventListener("click", function () {
       var next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
@@ -81,6 +108,7 @@
   }
   renderMaps();
   renderOverview();
+  renderJump();
 
   function applyTheme(theme, persist) {
     document.documentElement.dataset.theme = theme;
@@ -108,6 +136,117 @@
     }).map(function (map) {
       return '<article class="info-card"><h3>' + escapeHtml(map.name) + "</h3><p>" + escapeHtml(map.mode) + "</p></article>";
     }).join("");
+  }
+
+  function renderJump() {
+    var maps = (typeof JumpData === "undefined" || !JumpData.maps) ? null : JumpData.maps;
+    if (!maps) {
+      jumpCount.textContent = "";
+      jumpTierBar.innerHTML = "";
+      jumpRows.innerHTML = '<tr><td class="empty-row" colspan="5">The jump catalog could not be read.</td></tr>';
+      return;
+    }
+
+    Array.prototype.forEach.call(jumpClassBar.querySelectorAll("[data-class]"), function (button) {
+      button.setAttribute("aria-pressed", button.getAttribute("data-class") === jumpClass ? "true" : "false");
+    });
+
+    var filters = Object.fromEntries(new FormData(jumpForm).entries());
+    var tiers = [
+      { id: "1", label: "Tier 1" },
+      { id: "2", label: "Tier 2" },
+      { id: "3", label: "Tier 3" },
+      { id: "4", label: "Tier 4" },
+      { id: "5", label: "Tier 5" },
+      { id: "6", label: "Tier 6+" }
+    ];
+    jumpTierBar.innerHTML = tiers.map(function (tier) {
+      var count = maps.filter(function (map) {
+        return matchesJump(map, filters, tier.id);
+      }).length;
+      var pressed = jumpTier === tier.id;
+      return '<button type="button" data-tier="' + tier.id + '" aria-pressed="' + pressed + '"><strong>' +
+        count + '</strong><span>' + tier.label + "</span></button>";
+    }).join("");
+
+    var visible = maps.filter(function (map) {
+      return matchesJump(map, filters, jumpTier);
+    }).sort(function (a, b) {
+      var aTier = sortTier(a);
+      var bTier = sortTier(b);
+      if (aTier !== bTier) return aTier - bTier;
+      return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+    });
+
+    jumpCount.textContent = visible.length + " of " + maps.length + " maps";
+    if (!visible.length) {
+      jumpRows.innerHTML = '<tr><td class="empty-row" colspan="5">No maps match these categories.</td></tr>';
+      return;
+    }
+
+    jumpRows.innerHTML = visible.map(function (map) {
+      var page = "https://tempus2.xyz/maps/" + encodeURIComponent(map.name);
+      var file = "https://static.tempus2.xyz/tempus/server/maps/" + encodeURIComponent(map.name) + ".bsp.bz2";
+      var detail = map.date;
+      if (map.kind !== "rocket") detail = kindLabels[map.kind] + " · " + map.date;
+      return "<tr>" +
+        '<td data-label="Map"><strong><a href="' + page + '">' + escapeHtml(map.name) + "</a></strong><span class=\"class-role\">" + escapeHtml(detail) + "</span></td>" +
+        '<td data-label="Soldier">' + classLabel(map.s, map.sr) + "</td>" +
+        '<td data-label="Demoman">' + classLabel(map.d, map.dr) + "</td>" +
+        '<td data-label="Layout">' + escapeHtml(layoutLabel(map)) + "</td>" +
+        '<td data-label="Download"><a href="' + file + '">' + formatBytes(map.bytes) + "</a></td>" +
+      "</tr>";
+    }).join("");
+  }
+
+  function matchesJump(map, filters, tier) {
+    if (filters.type !== "all" && map.kind !== filters.type) return false;
+    if (filters.rating !== "all" && classRating(map) !== Number(filters.rating)) return false;
+    if (filters.layout === "bonus" && !map.bonus) return false;
+    if (filters.layout === "course" && !map.course) return false;
+    if (filters.layout === "trick" && !map.trick) return false;
+    if (filters.layout === "linear" && !map.linear) return false;
+    if (tier === "all") return true;
+    var value = classTier(map);
+    if (tier === "6") return value >= 6;
+    return value === Number(tier);
+  }
+
+  function classTier(map) {
+    var value = jumpClass === "demoman" ? map.d : map.s;
+    return value || 0;
+  }
+
+  function classRating(map) {
+    return jumpClass === "demoman" ? map.dr : map.sr;
+  }
+
+  function sortTier(map) {
+    var value = classTier(map);
+    return value > 0 ? value : 99;
+  }
+
+  function classLabel(tier, rating) {
+    if (!tier) return "—";
+    return ratings[rating] ? "T" + tier + " · " + ratings[rating] : "T" + tier;
+  }
+
+  function layoutLabel(map) {
+    var parts = [];
+    if (map.linear) parts.push("Linear");
+    if (map.checkpoint) parts.push(map.checkpoint + (map.checkpoint === 1 ? " checkpoint" : " checkpoints"));
+    if (map.bonus) parts.push(map.bonus + (map.bonus === 1 ? " bonus" : " bonuses"));
+    if (map.course) parts.push(map.course + (map.course === 1 ? " course" : " courses"));
+    if (map.trick) parts.push(map.trick + (map.trick === 1 ? " trick" : " tricks"));
+    return parts.length ? parts.join(", ") : "—";
+  }
+
+  function formatBytes(bytes) {
+    if (bytes >= 1048576) {
+      var mib = bytes / 1048576;
+      return (mib >= 10 ? mib.toFixed(0) : mib.toFixed(1)) + " MiB";
+    }
+    return Math.max(1, Math.round(bytes / 1024)) + " KiB";
   }
 
   function renderOverview() {

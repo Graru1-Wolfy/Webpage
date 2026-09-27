@@ -801,9 +801,95 @@ code {
 }
 
 #map-filters button[aria-pressed="true"],
+#jump-class button[aria-pressed="true"],
 #community-filters button[aria-pressed="true"] {
   background: var(--primary);
   color: var(--on-primary);
+}
+
+.jump-tiers {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.jump-tiers button {
+  padding: 16px;
+  text-align: left;
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.jump-tiers button[aria-pressed="true"] {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.jump-tiers strong {
+  display: block;
+  font-family: Newsreader, Georgia, serif;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.jump-tiers span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.jump-tiers button[aria-pressed="true"] span {
+  color: inherit;
+}
+
+.jump-filters {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.jump-files-head {
+  margin-top: 36px;
+}
+
+.jump-files-head h3 {
+  font-family: Newsreader, Georgia, serif;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.jump-files {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.jump-files h3 {
+  margin: 0 0 8px;
+  font-family: Outfit, "Segoe UI", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.jump-files .link-list {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.jump-files a,
+.jump-files span {
+  overflow-wrap: anywhere;
 }
 
 .region-grid {
@@ -887,8 +973,13 @@ code {
 
 @media (max-width: 860px) {
   .filter-bar,
-  .encyclopedia {
+  .encyclopedia,
+  .jump-files {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .jump-tiers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -914,12 +1005,18 @@ code {
 
   .filter-bar,
   .encyclopedia,
+  .jump-files,
   .metrics,
   .card-grid {
     grid-template-columns: 1fr;
   }
 
-  #map-filters {
+  .jump-tiers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #map-filters,
+  #jump-class {
     flex-wrap: wrap;
     width: 100%;
     border-radius: 16px;
