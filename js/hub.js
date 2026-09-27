@@ -48,25 +48,39 @@
   var filterForm = document.getElementById("server-filters");
   var filterCount = document.getElementById("filter-count");
   var themeToggle = document.getElementById("theme-toggle");
-  var servers = ServerData.tempus.concat(ServerData.jumpacademy).map(describeServer);
+  var servers = [];
+  var loadError = "";
+  try {
+    servers = ServerData.tempus.concat(ServerData.jumpacademy).map(describeServer);
+  } catch (error) {
+    loadError = "The server list could not be read.";
+  }
 
-  mapFilters.addEventListener("click", function (event) {
-    var button = event.target.closest("[data-filter]");
-    if (!button) return;
-    mapFilter = button.getAttribute("data-filter");
-    renderMaps();
-  });
+  if (mapFilters) {
+    mapFilters.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-filter]");
+      if (!button) return;
+      mapFilter = button.getAttribute("data-filter");
+      renderMaps();
+    });
+  }
 
-  filterForm.addEventListener("change", renderServers);
-  themeToggle.addEventListener("click", function () {
-    var next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-    applyTheme(next, true);
-  });
+  if (filterForm) filterForm.addEventListener("change", renderServers);
+  if (themeToggle) {
+    themeToggle.addEventListener("click", function () {
+      var next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      applyTheme(next, true);
+    });
+  }
 
   applyTheme(document.documentElement.dataset.theme || "dark", false);
+  try {
+    renderServers();
+  } catch (error) {
+    serverRows.innerHTML = '<tr><td class="empty-row" colspan="8">The server list could not be read.</td></tr>';
+  }
   renderMaps();
   renderOverview();
-  renderServers();
 
   function applyTheme(theme, persist) {
     document.documentElement.dataset.theme = theme;
@@ -120,6 +134,10 @@
     });
 
     filterCount.textContent = visible.length + " of " + servers.length + " servers";
+    if (loadError) {
+      serverRows.innerHTML = '<tr><td class="empty-row" colspan="8">' + escapeHtml(loadError) + "</td></tr>";
+      return;
+    }
     if (!visible.length) {
       serverRows.innerHTML = '<tr><td class="empty-row" colspan="8">No servers match these filters.</td></tr>';
       return;
