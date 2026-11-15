@@ -1,0 +1,29 @@
+name: Refresh jump data
+
+on:
+  schedule:
+    # Away from the top of the hour. GitHub may delay or skip this run.
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh Tempus fallback and Jump Academy snapshot
+        run: python3 scripts/refresh_jump_data.py
+      - name: Commit updated snapshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/tempus-fallback.json data/jump-academy.json
+          if git diff --cached --quiet; then
+            echo "Snapshots already match the sources."
+            exit 0
+          fi
+          git commit -m "Refresh jump data snapshots."
+          git push

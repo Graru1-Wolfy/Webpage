@@ -209,7 +209,6 @@ h1.logo a {
   font-weight: 700;
 }
 
-#maps,
 #jump,
 #community,
 #encyclopedia,
@@ -864,15 +863,6 @@ code {
   letter-spacing: 0;
 }
 
-#map-filters {
-  flex-wrap: wrap;
-  width: fit-content;
-  max-width: 100%;
-  margin-bottom: 16px;
-  border-radius: 20px;
-}
-
-#map-filters button[aria-pressed="true"],
 #jump-class button[aria-pressed="true"],
 #jump-activity button[aria-pressed="true"],
 #jump-ranks button[aria-pressed="true"],

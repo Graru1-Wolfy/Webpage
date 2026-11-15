@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>TF2 Hub</title>
-    <meta name="description" content="A fan hub for Team Fortress 2 community servers.">
+    <meta name="description" content="Jump maps, records, ranks, and Tempus and Jump Academy servers for Team Fortress 2.">
     <meta id="theme-color" name="theme-color" content="#14121c">
     <script>
       var theme = "dark";
@@ -29,13 +29,12 @@
     <header class="site-header">
       <div class="wrap header-inner">
         <h1 class="logo">
-          <a href="#maps">
+          <a href="#jump">
             <span class="logo-mark" aria-hidden="true"></span>
             TF2 Hub
           </a>
         </h1>
         <nav class="site-nav" aria-label="Page">
-          <a href="#maps">Maps</a>
           <a href="#jump">Jump</a>
           <a href="#community">Servers</a>
           <a href="#encyclopedia">Encyclopedia</a>
@@ -46,20 +45,11 @@
     </header>
 
     <main id="main">
-      <section class="wrap preview-section" id="maps">
-        <div class="section-head">
-          <h2>Maps</h2>
-          <p>A short list of maps that define the game. Filter them by mode.</p>
-        </div>
-        <div class="modes" id="map-filters" role="toolbar" aria-label="Filter maps"></div>
-        <div class="card-grid" id="map-grid"></div>
-      </section>
-
       <section class="wrap preview-section" id="jump">
         <div class="section-head">
           <h2>Jump</h2>
-          <p>Maps, recent records, and ranks from the <a href="https://tempus2.xyz/apidocs/">Tempus API</a>. Tier 1 is the easiest. Ratings are Good, Decent, Poor, and Bad. A download is the map file on the <a href="https://static.tempus2.xyz/tempus/server/maps/">static mirror</a> when that file is hosted there.</p>
-          <p>This catalog, the records, and the ranks are a snapshot from <time id="jump-updated">date unavailable</time>, not a live feed.</p>
+          <p>Maps, recent records, and ranks from the <a href="https://tempus2.xyz/apidocs/">Tempus API</a>. Tier 1 is the easiest. Ratings are Good, Decent, Poor, and Bad. The type filter uses the map name prefix, not a separate Tempus field.</p>
+          <p id="jump-status">Loading the Tempus catalog, records, and ranks.</p>
         </div>
         <div class="modes" id="jump-class" role="toolbar" aria-label="Class">
           <button type="button" data-class="soldier" aria-pressed="true">Soldier</button>
@@ -67,8 +57,8 @@
         </div>
         <div class="jump-tiers" id="jump-tiers" role="toolbar" aria-label="Tier"></div>
         <form class="filter-bar jump-filters" id="jump-filters">
-          <label>Type
-            <select name="type" aria-label="Type">
+            <label>Name prefix
+            <select name="type" aria-label="Type from the map name">
               <option value="all">All</option>
               <option value="rocket">Rocket jump</option>
               <option value="sticky">Sticky jump</option>
@@ -104,7 +94,6 @@
                 <th>Soldier</th>
                 <th>Demoman</th>
                 <th>Layout</th>
-                <th>Download</th>
               </tr>
             </thead>
             <tbody id="jump-rows"></tbody>
@@ -112,7 +101,7 @@
         </div>
         <div class="section-head jump-files-head">
           <h3>Recent records</h3>
-          <p>World records and top map times from <a href="https://tempus2.xyz/api/v0/activity">/activity</a>.</p>
+          <p>Jump world records and top map times from the <a href="https://tempus2.xyz/api/v0/activity">Tempus activity feed</a>.</p>
         </div>
         <div class="modes jump-switch" id="jump-activity" role="toolbar" aria-label="Record type">
           <button type="button" data-activity="map_wrs" aria-pressed="true">Map records</button>
@@ -192,19 +181,12 @@
       <section class="band" id="community">
         <div class="wrap">
           <div class="section-head">
-            <h2>Community servers</h2>
-            <p>Two different snapshots sit in this section. The cards are every listed TF2 community server. The table is only Tempus and Jump Academy.</p>
-          </div>
-          <div class="section-head jump-files-head">
-            <h3>All TF2 community servers</h3>
-            <p>Totals and regions are from <a href="https://www.steamserverbrowser.com/games/team-fortress-2">SteamServerBrowser</a>, which lists community servers only. Snapshot <time id="community-updated">date unavailable</time>. These numbers are not the jump list below.</p>
+            <h2>Jump servers</h2>
+            <p id="server-status">Loading Tempus and Jump Academy status.</p>
+            <p>Counts include only Tempus and Jump Academy. Latency is a regional estimate, not a measured ping. Tier is inferred from the server name. Rank is copied when the name says “Rank N”; an S-code rank is an estimate, and a missing rank is not stated. Tempus region groups the API country. Jump Academy region groups the location on the Jump Academy servers page. An address opens a Steam connect link.</p>
           </div>
           <div class="metrics" id="community-stats"></div>
           <div class="card-grid region-grid" id="region-grid"></div>
-          <div class="section-head jump-files-head">
-            <h3>Jump servers</h3>
-            <p>Tempus servers are the public list from the <a href="https://tempus2.xyz/api/v0/servers/statusList">Tempus API</a>. Jump Academy is listed with them. Player counts and online status are from the snapshot <time id="servers-updated">date unavailable</time>, not a live check. Latency is a regional estimate, not a measured ping. Tier is inferred from the server name. Rank is copied when the name says “Rank N”; an S-code rank is an estimate, and a missing rank is not stated. Jump Academy’s region is read from the server name. Tempus region groups the server’s country. Each address opens that server’s SteamServerBrowser page.</p>
-          </div>
           <form class="filter-bar" id="server-filters">
             <label>Region
               <select name="region" aria-label="Region">
@@ -383,7 +365,6 @@
         </div>
         <div>
           <p class="footer-label">On this page</p>
-          <a href="#maps">Maps</a>
           <a href="#jump">Jump</a>
           <a href="#community">Servers</a>
           <a href="#encyclopedia">Encyclopedia</a>
@@ -394,8 +375,6 @@
         </div>
       </div>
     </footer>
-    <script src="js/servers.js"></script>
-    <script src="js/jump.js"></script>
     <script src="js/hub.js"></script>
   </body>
 </html>
