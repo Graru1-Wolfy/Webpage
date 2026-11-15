@@ -488,8 +488,10 @@
     return row.next_points - row.points;
   }
 
-  // Absolute Tempus class ranks, the same cutoffs for Soldier and Demoman.
-  // Checked against the live class rank list on 2026-11-15. The in-game
+  // Titles sit on fixed positions in the points-sorted class list.
+  // Soldier and Demoman use the same positions. Rank 1000 is Jester and
+  // rank 1001 is Plebeian on both. Overall is a third points sort and the
+  // profile has no overall title. Checked live on 2026-11-15. The in-game
   // roman numeral is a subdivision inside the group; the API title is the group.
   var rankGroups = [
     { title: "Emperor", maxRank: 1 },
@@ -535,7 +537,7 @@
     var index = rankGroupIndex(title);
     if (index <= 0) return null;
     var next = rankGroups[index - 1];
-    return { title: next.title, maxRank: next.maxRank };
+    return { title: next.title, maxRank: next.maxRank, belowRank: next.maxRank + 1 };
   }
 
   function isHighestRankGroup(title) {
@@ -543,13 +545,23 @@
   }
 
   function rankGroupCutoff(players, maxRank) {
-    var match = null;
+    return rankBoundary(players, maxRank).points;
+  }
+
+  function rankBoundary(players, maxRank) {
+    var at = null;
+    var after = null;
     (players || []).forEach(function (player) {
       if (!player || typeof player.rank !== "number" || typeof player.points !== "number") return;
-      if (player.rank > maxRank) return;
-      if (!match || player.rank > match.rank) match = player;
+      if (player.rank <= maxRank && (!at || player.rank > at.rank)) at = player;
+      if (player.rank > maxRank && (!after || player.rank < after.rank)) after = player;
     });
-    return match ? match.points : null;
+    return {
+      rank: at ? at.rank : null,
+      points: at ? at.points : null,
+      belowRank: after ? after.rank : null,
+      belowPoints: after ? after.points : null
+    };
   }
 
   function mapTagNames(info, jumpClass) {
@@ -772,6 +784,7 @@
     nextRankGroup: nextRankGroup,
     isHighestRankGroup: isHighestRankGroup,
     rankGroupCutoff: rankGroupCutoff,
+    rankBoundary: rankBoundary,
     mapTagNames: mapTagNames,
     selectSuggestions: selectSuggestions,
     classLabel: classLabel,

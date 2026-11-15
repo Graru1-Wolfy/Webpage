@@ -69,7 +69,7 @@ assert("automatic practice cap stays put", TF2.tierCap(3, "practice", null) === 
 assert("chosen tier overrides the cap", TF2.tierCap(3, "points", 4) === 4);
 assert("next rank gap", TF2.formatPoints(TF2.pointsGap({ soldier: { rank: 1174, points: 2447.73, next_points: 2450.66 } }, "soldier")) === "2.93");
 var plebeian = TF2.nextRankGroup("Plebeian");
-assert("plebeian next group is jester", plebeian.title === "Jester" && plebeian.maxRank === 1000);
+assert("plebeian next group is jester", plebeian.title === "Jester" && plebeian.maxRank === 1000 && plebeian.belowRank === 1001);
 assert("baron next group is count", TF2.nextRankGroup("Baron").title === "Count" && TF2.nextRankGroup("Baron").maxRank === 25);
 assert("knight next group is baron", TF2.nextRankGroup("Knight").title === "Baron" && TF2.nextRankGroup("Knight").maxRank === 50);
 assert("emperor has no next group", TF2.nextRankGroup("Emperor") === null && TF2.isHighestRankGroup("Emperor") === true);
@@ -79,9 +79,14 @@ assert("a roman numeral stays in its group", TF2.nextRankGroup("Plebeian IV").ti
 assert("a gendered title uses the same group", TF2.nextRankGroup("Baroness").title === "Count");
 assert("cutoff is the worst rank inside the next group", TF2.rankGroupCutoff([
   { rank: 999, points: 3200, name: "hidden" },
-  { rank: 1000, points: 3149, name: "hidden" },
-  { rank: 1001, points: 3148, name: "hidden" }
-], 1000) === 3149);
+  { rank: 1000, points: 3149.2, name: "hidden" },
+  { rank: 1001, points: 3148.67, name: "hidden" }
+], 1000) === 3149.2);
+var boundary = TF2.rankBoundary([
+  { rank: 1000, points: 3149.2, name: "hidden", steamid: "STEAM_0:1:1" },
+  { rank: 1001, points: 3148.67, name: "hidden", steamid: "STEAM_0:0:2" }
+], 1000);
+assert("title change is the two neighboring positions", boundary.rank === 1000 && boundary.points === 3149.2 && boundary.belowRank === 1001 && boundary.belowPoints === 3148.67 && boundary.name == null && boundary.steamid == null);
 assert("a skipped rank uses the last rank still inside the group", TF2.rankGroupCutoff([
   { rank: 998, points: 10 },
   { rank: 1001, points: 9 }

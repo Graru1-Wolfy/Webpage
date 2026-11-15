@@ -313,9 +313,16 @@
     groupTarget = { title: next.title, points: null, state: "loading" };
     renderSuggestions();
     var classId = jumpClass === "demoman" ? 4 : 3;
-    loadCutoff(classId, next.maxRank).then(function (points) {
+    loadCutoff(classId, next.maxRank).then(function (boundary) {
       if (token !== groupToken) return;
-      groupTarget = { title: next.title, points: points, state: points == null ? "missing" : "ready" };
+      groupTarget = {
+        title: next.title,
+        rank: boundary.rank,
+        points: boundary.points,
+        belowRank: boundary.belowRank,
+        belowPoints: boundary.belowPoints,
+        state: boundary.points == null ? "missing" : "ready"
+      };
       renderSuggestions();
     }).catch(function () {
       if (token !== groupToken) return;
@@ -327,12 +334,22 @@
   function loadCutoff(classId, maxRank) {
     function read(start) {
       return TF2.loadJson("https://tempus2.xyz/api/v0/ranks/class/" + classId + "?start=" + start, 15000).then(function (data) {
-        return TF2.rankGroupCutoff(data && data.players, maxRank);
+        return TF2.rankBoundary(data && data.players, maxRank);
       });
     }
-    return read(maxRank).then(function (points) {
-      if (points != null || maxRank <= 1) return points;
-      return read(Math.max(1, maxRank - 49));
+    function merge(first, second) {
+      return {
+        rank: first.rank != null ? first.rank : second.rank,
+        points: first.points != null ? first.points : second.points,
+        belowRank: first.belowRank != null ? first.belowRank : second.belowRank,
+        belowPoints: first.belowPoints != null ? first.belowPoints : second.belowPoints
+      };
+    }
+    return read(maxRank).then(function (boundary) {
+      if ((boundary.points != null && boundary.belowPoints != null) || maxRank <= 1) return boundary;
+      return read(Math.max(1, maxRank - 49)).then(function (wider) {
+        return merge(boundary, wider);
+      });
     });
   }
 
@@ -511,9 +528,16 @@
     sentence += ".";
     if (groupTarget && groupTarget.state === "ready" && info.points != null) {
       var remain = groupTarget.points - info.points;
+      if (groupTarget.rank && groupTarget.belowRank && title) {
+        sentence += " The title changes between " + label + " rank " + groupTarget.rank.toLocaleString() + " and rank " + groupTarget.belowRank.toLocaleString() + ".";
+        sentence += " Rank " + groupTarget.rank.toLocaleString() + " is " + groupTarget.title + " at " + TF2.formatPoints(groupTarget.points) + " points";
+        sentence += groupTarget.belowPoints != null
+          ? ", and rank " + groupTarget.belowRank.toLocaleString() + " is " + title + " at " + TF2.formatPoints(groupTarget.belowPoints) + " points."
+          : ".";
+      }
       sentence += remain > 0
-        ? " The next rank group is " + groupTarget.title + ", at " + TF2.formatPoints(groupTarget.points) + " points, so " + TF2.formatPoints(remain) + " points remain."
-        : " The next rank group is " + groupTarget.title + ", and these points already reach it.";
+        ? " " + TF2.formatPoints(remain) + " points remain to reach rank " + (groupTarget.rank ? groupTarget.rank.toLocaleString() : groupTarget.title) + "."
+        : " These points already reach rank " + (groupTarget.rank ? groupTarget.rank.toLocaleString() : groupTarget.title) + ".";
     } else if (groupTarget && groupTarget.state === "top") {
       sentence += " Emperor is the highest rank group.";
     } else if (groupTarget && groupTarget.state === "unknown") {
