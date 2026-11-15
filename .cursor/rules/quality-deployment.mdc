@@ -1,0 +1,51 @@
+---
+description: "Testing, accessibility verification, performance, security, browser support, and GitHub Pages deployment."
+alwaysApply: false
+---
+
+# Quality, Testing, and Deployment
+
+## Planning and change control
+- For complex or multi-file work, inspect the current code and dependencies, identify affected behavior, and present a concise implementation plan before editing.
+- Routine, reversible implementation details may be handled autonomously when they remain within the approved scope and architecture.
+- Obtain approval before major architecture changes, new dependencies, destructive operations, data migrations, significant behavior changes, or scope expansion.
+- Explain risks, alternatives, migration implications, and rollback options for major changes.
+- Do not claim a test or deployment passed unless it was actually run and its result inspected.
+
+## Regression protection
+- Preserve and test the existing jump-map catalog, filtering and classification, records/activity, rankings, jump-server discovery and filtering, navigation, and theme persistence.
+- Before refactoring, identify the current behavior and data contracts.
+- Prefer targeted changes and maintain a clear rollback path.
+- Do not delete or replace existing datasets until the replacement is validated and approved.
+
+## Testing strategy
+- Use both automated and manual testing.
+- Add automated checks for syntax, data/schema validation, core domain logic, filtering, sorting, normalization, and critical UI behavior where practical.
+- Test successful, empty, stale, malformed, partial, and unavailable data states.
+- Test ingestion failure and last-known-good fallback behavior.
+- Manually verify keyboard navigation, focus order, screen-reader semantics where practical, touch interactions, and responsive layouts.
+- Test at representative widths, including 320px mobile, common phone/tablet widths, and desktop.
+- Verify current Chrome, Firefox, Edge, and Safari. Do not promise support for obsolete browsers unless separately requested.
+- Check browser console and network errors during manual verification.
+
+## Accessibility and performance targets
+- Target WCAG 2.2 AA.
+- Preserve semantic structure, keyboard access, visible focus, accessible names, contrast, and reduced-motion support.
+- Aim for Core Web Vitals: LCP at or below 2.5 seconds, INP at or below 200 milliseconds, and CLS at or below 0.1 at the 75th percentile where field data is available.
+- Avoid unnecessary dependencies, oversized bundles, blocking scripts, layout shifts, and repeated processing of large datasets.
+- Treat performance targets as goals to measure, not claims to make without evidence.
+
+## Security
+- Treat external data as untrusted.
+- Prevent DOM injection and unsafe URL handling.
+- Never commit API credentials, tokens, private keys, or secrets.
+- Keep GitHub Actions permissions minimal and avoid executing untrusted pull-request content with privileged secrets.
+- Review dependency necessity, maintenance, licensing, and security before adding packages.
+
+## GitHub Pages deployment
+- Remember that GitHub Pages serves static content; do not assume server-side runtime support.
+- Keep asset paths and routing compatible with the repository's GitHub Pages base path and deployment configuration.
+- Validate links, asset paths, generated JSON paths, and case sensitivity.
+- Ensure the published site can operate with static fallback data if external APIs fail.
+- Verify the build/deployment workflow and published output before reporting deployment success.
+- Document required repository settings, workflow permissions, and any manual setup steps.

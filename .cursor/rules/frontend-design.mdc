@@ -1,0 +1,52 @@
+---
+description: "Responsive UI, visual system, navigation, accessibility, and shared frontend components."
+globs:
+  - "index.html"
+  - "css/**/*.css"
+  - "src/**/*.html"
+  - "src/**/*.css"
+alwaysApply: false
+---
+
+# Frontend Design and UX
+
+## Design direction
+- Build a coherent, modern interface appropriate for a TF2 jumping community resource hub.
+- Support adaptive light and dark themes. Respect the user's saved preference and provide a sensible system-preference default where appropriate.
+- Use a consistent design-token system for color, typography, spacing, radii, borders, elevation, focus, and motion.
+- Prefer reusable shared components and patterns over duplicated page-specific implementations.
+- Keep information density balanced: show important comparisons and status clearly, while using progressive disclosure for secondary or advanced details.
+- Avoid decorative effects that reduce readability, performance, or accessibility.
+
+## Responsive behavior
+- Treat desktop and mobile as equally important product experiences.
+- Adapt navigation to the available space and input method; do not simply shrink desktop navigation.
+- Ensure core tasks remain discoverable and usable on touch devices.
+- Support narrow viewports down to 320 CSS pixels without loss of essential content or horizontal page overflow.
+- Rework wide tables into accessible compact layouts or controlled horizontal scrolling with clear affordances. Do not discard important columns or meaning on mobile.
+- Respect safe-area insets where relevant.
+- Test filters, menus, dialogs, cards, tables, and navigation at representative mobile, tablet, and desktop widths.
+
+## Accessibility
+- Target WCAG 2.2 AA.
+- Use semantic HTML and a logical heading hierarchy, including one clear page-level heading.
+- All interactive controls must be keyboard operable, have accessible names, visible focus indicators, and appropriate state semantics.
+- Associate form labels and validation messages with their controls.
+- Do not communicate status, tier, rating, or errors by color alone.
+- Maintain sufficient text and UI contrast in both themes.
+- Respect `prefers-reduced-motion`; avoid unnecessary animation and motion-triggered disorientation.
+- Use appropriate ARIA only when native HTML semantics are insufficient.
+
+## Interaction and presentation
+- Provide clear loading, empty, error, stale-data, and success states.
+- Keep filters understandable and usable with keyboard, touch, and assistive technology.
+- Make active navigation and selected filters visually and programmatically identifiable.
+- Keep typography legible and controls comfortably targetable; prefer approximately 44 by 44 CSS pixels for touch targets where practical.
+- Avoid layout shifts when asynchronous content loads. Reserve space for data and imagery when dimensions are known.
+
+## Implementation
+- Inspect the existing CSS and markup before introducing a new design system.
+- Consolidate repeated values into tokens and repeated UI into shared components.
+- Avoid broad global selectors and fragile styling coupled to DOM position.
+- Do not introduce a CSS framework or component library without evaluating its maintenance and bundle cost and obtaining approval for a major dependency.
+- Keep styles organized by tokens, base, layout, components, and page/feature concerns where the project structure permits.

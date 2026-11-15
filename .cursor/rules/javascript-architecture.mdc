@@ -1,0 +1,56 @@
+---
+description: "JavaScript and TypeScript architecture, modularity, data flow, state, and safe DOM practices."
+globs:
+  - "js/**/*.js"
+  - "js/**/*.ts"
+  - "src/**/*.js"
+  - "src/**/*.ts"
+  - "src/**/*.tsx"
+alwaysApply: false
+---
+
+# JavaScript and TypeScript Architecture
+
+## Before choosing or changing technology
+- Evaluate the current vanilla HTML/CSS/JavaScript implementation before proposing a framework or build system.
+- Evaluate TypeScript based on the value of static checking for the project's data models, API contracts, and feature complexity.
+- Compare maintainability, accessibility, performance, deployment complexity, learning/operational overhead, and migration cost.
+- Do not migrate to a framework, TypeScript, or a bundler solely because it is fashionable. A substantial migration requires a concrete rationale and user approval.
+
+## Structure and separation of concerns
+- Keep data acquisition, data normalization, domain logic, UI rendering, navigation, and persistence separate.
+- Prefer small modules with explicit responsibilities and stable interfaces.
+- Keep feature-specific behavior within its feature boundary; extract shared utilities/components only when reuse and consistency justify it.
+- Avoid monolithic files and large embedded data literals in application logic.
+- Keep source datasets separate from rendering code. Prefer validated, documented JSON or typed data modules for generated/static datasets.
+- Avoid circular dependencies and hidden global state.
+- Preserve the current public behavior when refactoring; introduce changes incrementally.
+
+## Data contracts
+- Define explicit models for jump maps, classes, disciplines, records, players/rankings, servers, source metadata, and update metadata as the implementation requires.
+- Validate external and generated data at ingestion boundaries. Handle missing, malformed, unexpected, and version-mismatched fields safely.
+- Normalize data once at a clear boundary rather than scattering source-specific transformations throughout rendering code.
+- Preserve source identifiers and provenance when available.
+- Treat unknown values as unknown; do not invent defaults that could be mistaken for facts.
+
+## DOM and security
+- Treat all external data, community submissions, server names, map names, and URLs as untrusted input.
+- Prefer `textContent`, DOM construction, and safe attribute assignment. Do not interpolate untrusted strings into `innerHTML`.
+- If HTML rendering is unavoidable, use a well-maintained sanitizer and document why it is needed.
+- Validate URL protocols and allow only expected schemes such as HTTPS (and HTTP only where explicitly required).
+- Do not use `eval`, `new Function`, or dynamically execute downloaded content.
+- Keep secrets out of browser code, committed files, generated public JSON, and client-side configuration.
+
+## State, errors, and performance
+- Make state ownership explicit and avoid duplicating derived state.
+- Handle asynchronous requests, cancellation, race conditions, timeouts, and partial failures.
+- Avoid unnecessary full-page rerenders and expensive repeated transformations for large datasets.
+- Use stable keys/identifiers when rendering collections.
+- Surface actionable errors without exposing secrets or sensitive implementation details.
+- Keep console output clean in production; use structured diagnostics during development.
+
+## Compatibility and maintainability
+- Target current Chrome, Firefox, Edge, and Safari.
+- Use platform features supported by the target browsers or provide a justified fallback.
+- Prefer readable, conventional code over clever abstractions.
+- Document non-obvious domain logic and data transformations.
