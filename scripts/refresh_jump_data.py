@@ -2,16 +2,20 @@
 """Refresh the Tempus fallback and the Jump Academy server snapshot.
 
 Tempus publishes a CORS-enabled API, so the page reads it directly and uses
-data/tempus-fallback.json only when that request fails. jumpacademy.tf does
-not send Access-Control-Allow-Origin, so the browser cannot read it. This
-script copies the public servers page into data/jump-academy.json.
+data/tempus-fallback.json only when that request fails. Jump Academy addresses
+are parsed from the public servers page. Name, map, and player counts for
+those addresses come from a Steam server query (A2S_INFO), the same query the
+in-game server browser uses. The browser cannot send that UDP query itself.
 """
 
 import json
 import re
+import socket
+import struct
 import sys
 import time
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -74,13 +78,23 @@ def require_servers(servers):
             raise RuntimeError("Tempus server list has an invalid record")
 
 
-def parse_academy(html):
+def parse_academy_addresses(html):
+    """Read addresses and locations from the Jump Academy servers page.
+
+    Player counts, maps, and hostnames are not taken from this page. Those
+    come from a Steam server query of the addresses.
+    """
     rows = re.findall(r'<tr class="server-[^"]+">(.*?)</tr>', html, re.S)
     servers = []
+    seen = set()
     for row in rows:
         connect = re.search(r"steam://connect/([0-9.]+):(\d+)", row)
         if not connect:
             continue
+        address = "%s:%s" % (connect.group(1), connect.group(2))
+        if address in seen:
+            continue
+        seen.add(address)
         location = ""
         located = re.search(r'<img[^>]+title="([^"]+)"', row)
         if located and not located.group(1).startswith("Connect to"):
@@ -90,32 +104,86 @@ def parse_academy(html):
         named = re.search(r"<img[^>]*>\s*(?:&nbsp;)?\s*([^<]+)", row)
         if named:
             name = re.sub(r"\s+", " ", named.group(1)).strip()
-        current = re.search(r'href="https://jumpacademy\.tf/maps/[^"]*">([^<]*)</a>', row)
-        map_name = current.group(1).strip() if current else ""
-        players_cell = re.search(r"<td[^>]*>\s*(OFFLINE|\d+\s*/\s*\d+)\s*</td>", row)
-        online = False
-        players = 0
-        max_players = None
-        if players_cell and players_cell.group(1) != "OFFLINE":
-            online = True
-            counts = players_cell.group(1).split("/")
-            players = int(counts[0].strip())
-            max_players = int(counts[1].strip())
-        if not name:
-            continue
         servers.append({
-            "name": name,
-            "address": "%s:%s" % (connect.group(1), connect.group(2)),
-            "map": map_name,
-            "players": players,
-            "maxPlayers": max_players,
-            "online": online,
+            "name": name or address,
+            "address": address,
+            "map": "",
+            "players": 0,
+            "maxPlayers": None,
+            "online": False,
             "country": country,
             "location": location,
         })
     if len(servers) < 10:
-        raise RuntimeError("Jump Academy server page parsed too few servers")
+        raise RuntimeError("Jump Academy server page parsed too few addresses")
     return servers
+
+
+def _cstring(data, index):
+    end = data.index(b"\x00", index)
+    return data[index:end].decode("utf-8", "replace"), end + 1
+
+
+def query_a2s(address, timeout=2.0):
+    host, port_text = address.rsplit(":", 1)
+    port = int(port_text)
+    request = b"\xFF\xFF\xFF\xFF\x54Source Engine Query\x00"
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(timeout)
+    try:
+        sock.sendto(request, (host, port))
+        data, _ = sock.recvfrom(8192)
+        if len(data) >= 9 and data[4:5] == b"A":
+            sock.sendto(request + data[5:9], (host, port))
+            data, _ = sock.recvfrom(8192)
+        if len(data) < 6 or data[4:5] != b"I":
+            return None
+        index = 6
+        name, index = _cstring(data, index)
+        map_name, index = _cstring(data, index)
+        folder, index = _cstring(data, index)
+        _game, index = _cstring(data, index)
+        appid = struct.unpack_from("<H", data, index)[0]
+        index += 2
+        if appid != 440 and folder != "tf":
+            return None
+        players = data[index]
+        max_players = data[index + 1]
+        return {
+            "name": name,
+            "map": map_name,
+            "players": int(players),
+            "maxPlayers": int(max_players),
+            "online": True,
+        }
+    except (socket.timeout, OSError, ValueError, IndexError, UnicodeError):
+        return None
+    finally:
+        sock.close()
+
+
+def apply_a2s(servers):
+    def query_one(server):
+        return server["address"], query_a2s(server["address"])
+
+    answered = 0
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        for address, info in pool.map(query_one, servers):
+            if not info:
+                continue
+            answered += 1
+            for server in servers:
+                if server["address"] != address:
+                    continue
+                server["name"] = info["name"] or server["name"]
+                server["map"] = info["map"]
+                server["players"] = info["players"]
+                server["maxPlayers"] = info["maxPlayers"]
+                server["online"] = True
+                break
+    if answered < 5:
+        raise RuntimeError("Steam server query answered %s Jump Academy servers" % answered)
+    return answered
 
 
 def write_json(path, payload):
@@ -157,14 +225,18 @@ def main():
     content_type, body = fetch(ACADEMY)
     if "html" not in content_type:
         raise RuntimeError("Jump Academy servers page returned %s" % (content_type or "no content type"))
-    academy = parse_academy(body.decode("utf-8", "replace"))
+    academy = parse_academy_addresses(body.decode("utf-8", "replace"))
+    answered = apply_a2s(academy)
     write_json(DATA / "jump-academy.json", {
         "source": ACADEMY,
+        "query": "A2S_INFO",
         "retrieved": retrieved,
-        "note": "Parsed from the public servers page. The browser cannot request this host directly.",
+        "note": "Addresses are parsed from the Jump Academy servers page. Name, map, and player counts are from a Steam server query of those addresses.",
         "servers": academy,
     })
-    print("Wrote %s maps, %s Tempus servers, %s Jump Academy servers" % (len(maps), len(servers), len(academy)))
+    online = sum(1 for server in academy if server["online"])
+    print("Wrote %s maps, %s Tempus servers, %s Jump Academy addresses (%s answered, %s online)" % (
+        len(maps), len(servers), len(academy), answered, online))
 
 
 if __name__ == "__main__":

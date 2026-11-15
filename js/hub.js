@@ -283,7 +283,7 @@
     var node = document.getElementById("server-status");
     if (!node) return;
     var tempus = tempusLive ? "Tempus status is live." : "Tempus status is the saved snapshot from " + formatIso(tempusRetrieved) + ".";
-    var academy = "Jump Academy status is the servers-page snapshot from " + formatIso(academyRetrieved) + ", because that site does not allow browser requests.";
+    var academy = "Jump Academy name, map, and player counts are a Steam server query of the parsed addresses from " + formatIso(academyRetrieved) + ".";
     node.textContent = tempus + " " + academy;
   }
 
