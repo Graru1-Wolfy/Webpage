@@ -43,14 +43,47 @@
     <main id="main" class="wrap preview-section">
       <div class="section-head">
         <h1 class="page-title">Maps</h1>
-        <p>A finder for the next map. Tier 1 is the easiest. Ratings are Good, Decent, Poor, and Bad. The type filter uses the map name prefix, not a separate Tempus field. Screenshots come from Tempus.</p>
+        <p>Find the next map. A player lookup narrows this list. Tier 1 is the easiest. Screenshots come from Tempus.</p>
         <p id="jump-status">Loading the Tempus catalog.</p>
       </div>
-      <div class="modes" id="jump-class" role="toolbar" aria-label="Class">
-        <button type="button" data-class="soldier" aria-pressed="true">Soldier</button>
-        <button type="button" data-class="demoman" aria-pressed="false">Demoman</button>
+      <form class="filter-bar finder-player" id="recommend-form">
+        <label>Tempus player
+          <input name="player" type="search" aria-label="Tempus player name" placeholder="Player name">
+        </label>
+        <button type="submit" class="btn btn-primary">Look up</button>
+      </form>
+      <div class="pick-list" id="recommend-picks"></div>
+      <div class="finder-class">
+        <div class="modes" id="jump-class" role="toolbar" aria-label="Class">
+          <button type="button" data-class="soldier" aria-pressed="true">Soldier</button>
+          <button type="button" data-class="demoman" aria-pressed="false">Demoman</button>
+        </div>
+      </div>
+      <p id="recommend-status" class="player-standing"></p>
+      <div id="player-tools" hidden>
+        <div class="modes" id="recommend-goal" role="toolbar" aria-label="Suggestion">
+          <button type="button" data-goal="practice" aria-pressed="true">Practice</button>
+          <button type="button" data-goal="improve" aria-pressed="false">Improve</button>
+          <button type="button" data-goal="points" aria-pressed="false">Points</button>
+        </div>
+        <div class="modes" id="list-mode" role="toolbar" aria-label="Which maps to show">
+          <button type="button" data-list="suggested" aria-pressed="true">Suggested</button>
+          <button type="button" data-list="catalog" aria-pressed="false">All maps</button>
+        </div>
+        <label id="title-target-label">Desired title
+          <select id="title-target" aria-label="Desired title for the points goal"></select>
+        </label>
+        <details class="player-details">
+          <summary>Details</summary>
+          <p id="player-detail"></p>
+        </details>
       </div>
       <div class="jump-tiers" id="jump-tiers" role="toolbar" aria-label="Tier"></div>
+      <div id="recommend-refine" hidden>
+        <p id="suggest-cap-label" class="filter-count">Highest tier</p>
+        <div class="tier-cap" id="suggest-cap" role="toolbar" aria-label="Highest tier to suggest"></div>
+        <div class="pick-list" id="suggest-tags" role="toolbar" aria-label="Map tags"></div>
+      </div>
       <form class="filter-bar jump-filters" id="jump-filters">
         <label>Name
           <input name="query" type="search" aria-label="Map name" placeholder="jump_">
@@ -106,32 +139,6 @@
         </table>
       </div>
       <button type="button" class="btn btn-ghost" id="map-more">Show more maps</button>
-
-      <section class="recommend" aria-labelledby="recommend-title">
-        <div class="section-head">
-          <h2 id="recommend-title">Suggest from a profile</h2>
-          <p>Looks up a Tempus player and suggests maps to practice, a step up, or points toward the next numbered title. Finished maps, class, group, and points come from Tempus Plaza for this visit. This site does not keep a copy. The points goal uses the Tempus Plaza calculator and stays near tiers that player already finishes. Raise the tier limit when a harder map is intentional.</p>
-        </div>
-        <form class="filter-bar recommend-form" id="recommend-form">
-          <label>Tempus player
-            <input name="player" type="search" aria-label="Tempus player name" required>
-          </label>
-          <button type="submit" class="btn btn-primary">Look up</button>
-        </form>
-        <div class="modes" id="recommend-goal" role="toolbar" aria-label="Suggestion">
-          <button type="button" data-goal="practice" aria-pressed="true">Practice</button>
-          <button type="button" data-goal="improve" aria-pressed="false">Improve</button>
-          <button type="button" data-goal="points" aria-pressed="false">Points</button>
-        </div>
-        <p id="recommend-status" class="filter-count"></p>
-        <div id="recommend-refine" hidden>
-          <p id="suggest-cap-label" class="filter-count">Highest tier</p>
-          <div class="tier-cap" id="suggest-cap" role="toolbar" aria-label="Highest tier to suggest"></div>
-          <div class="pick-list" id="suggest-tags" role="toolbar" aria-label="Map tags"></div>
-        </div>
-        <div class="pick-list" id="recommend-picks"></div>
-        <div id="recommend-results"></div>
-      </section>
     </main>
     <footer class="site-footer">
       <div class="wrap footer-inner">
