@@ -123,6 +123,10 @@ input {
   border: 0;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .wrap {
   width: min(var(--wrap), calc(100% - 40px));
   margin-inline: auto;
@@ -214,6 +218,10 @@ h1.logo a {
 #encyclopedia,
 #links {
   scroll-margin-top: var(--sticky-offset);
+}
+
+.nav-toggle {
+  display: none;
 }
 
 .theme-toggle,
@@ -686,33 +694,38 @@ code {
   }
 
   .theme-toggle {
+    margin-left: 8px;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     margin-left: auto;
   }
 
-  .site-nav {
-    order: 3;
-    width: 100%;
-    margin: 2px 0 0;
-    gap: 8px;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-    scroll-snap-type: x proximity;
-    padding-right: 8px;
+  .logo {
+    margin-right: 0;
   }
 
-  .site-nav::-webkit-scrollbar {
+  .site-nav {
     display: none;
+    order: 4;
+    width: 100%;
+    margin: 8px 0 4px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  body.nav-open .site-nav {
+    display: flex;
   }
 
   .site-nav a {
-    flex: 0 0 auto;
-    scroll-snap-align: start;
     min-height: 44px;
-    padding: 8px 12px;
+    padding: 10px 14px;
     border: 1px solid var(--border);
-    border-radius: 999px;
+    border-radius: 12px;
     background: var(--surface-raised);
     font-weight: 600;
   }
@@ -730,6 +743,18 @@ code {
 
   .metrics {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 400px) {
+  .header-inner {
+    gap: 8px;
+  }
+
+  .nav-toggle,
+  .theme-toggle {
+    padding: 8px 10px;
+    font-size: 0.85rem;
   }
 }
 
@@ -1147,6 +1172,44 @@ code {
     min-height: 44px;
   }
 
+  .jump-tiers {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+    margin: 10px 0;
+  }
+
+  .jump-tiers button {
+    min-height: 0;
+    padding: 8px 2px;
+    text-align: center;
+  }
+
+  .jump-tiers strong {
+    font-size: 1.05rem;
+  }
+
+  .jump-tiers span {
+    margin-top: 2px;
+    font-size: 0.62rem;
+    letter-spacing: 0;
+  }
+
+  .jump-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .jump-filters label:first-child {
+    grid-column: 1 / -1;
+  }
+
+  #map-table-wrap {
+    max-height: none;
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+
   .filter-bar select {
     font-size: 1rem;
     padding: 10px 12px;
@@ -1251,7 +1314,13 @@ code {
     font-weight: 650;
   }
 
-  #jump-rows td[data-label="Map"]::before,
+  #jump-rows td::before {
+  content: attr(data-label);
+  display: block;
+  margin: 0 0 2px;
+}
+
+#jump-rows td[data-label="Map"]::before,
   .server-rows td[data-label="Server"]::before,
   #jump-activity-rows td[data-label="Map"]::before,
   #jump-rank-rows td[data-label="Player"]::before {
@@ -1410,6 +1479,11 @@ h1.page-title {
   flex-wrap: wrap;
 }
 
+#map-results,
+#map-table-wrap {
+  scroll-margin-top: 72px;
+}
+
 .map-grid,
 .map-list {
   display: grid;
@@ -1438,28 +1512,37 @@ h1.page-title {
 
 .map-list .map-card {
   flex-direction: row;
-  align-items: stretch;
+  align-items: center;
 }
 
-.map-card img,
-.map-shot {
+.map-card img {
+  display: block;
   width: 100%;
+  height: auto;
   aspect-ratio: 16 / 9;
   object-fit: cover;
   background: var(--surface);
 }
 
 .map-list .map-card img,
-.map-list .map-shot {
-  width: 180px;
-  flex: 0 0 180px;
+.map-list .map-shot-fallback {
+  width: 160px;
+  flex: 0 0 160px;
 }
 
 .map-shot-fallback {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 10px;
+  background: var(--surface);
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
+}
+
+.map-list .map-shot-fallback {
+  min-height: 90px;
 }
 
 .map-card-body {
@@ -1518,19 +1601,39 @@ h1.page-title {
   margin-top: 28px;
 }
 
-@media (max-width: 560px) {
-  .recommend-form {
-    grid-template-columns: 1fr;
+@media (max-width: 720px) {
+  .map-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
-  .map-list .map-card {
-    flex-direction: column;
+  .map-card-body {
+    padding: 8px 10px 10px;
+  }
+
+  .map-card-body strong {
+    font-size: 0.92rem;
+    overflow-wrap: anywhere;
+  }
+
+  .map-list {
+    gap: 8px;
   }
 
   .map-list .map-card img,
-  .map-list .map-shot {
-    width: 100%;
-    flex-basis: auto;
+  .map-list .map-shot-fallback {
+    width: 96px;
+    flex-basis: 96px;
+  }
+
+  .map-list .map-shot-fallback {
+    min-height: 54px;
+  }
+}
+
+@media (max-width: 560px) {
+  .recommend-form {
+    grid-template-columns: 1fr;
   }
 }
 

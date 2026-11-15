@@ -53,6 +53,24 @@
     }
   };
 
+  var navToggle = document.getElementById("nav-toggle");
+  if (navToggle && document.body && document.body.classList) {
+    navToggle.addEventListener("click", function () {
+      var open = document.body.classList.toggle("nav-open");
+      navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      navToggle.textContent = open ? "Close" : "Menu";
+    });
+    if (document.addEventListener) {
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape" || !document.body.classList.contains("nav-open")) return;
+        document.body.classList.remove("nav-open");
+        navToggle.setAttribute("aria-expanded", "false");
+        navToggle.textContent = "Menu";
+        navToggle.focus();
+      });
+    }
+  }
+
   var toggle = document.getElementById("theme-toggle");
   if (toggle) {
     toggle.addEventListener("click", function () {
