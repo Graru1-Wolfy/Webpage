@@ -110,7 +110,7 @@
       <section class="recommend" aria-labelledby="recommend-title">
         <div class="section-head">
           <h2 id="recommend-title">Suggest from a profile</h2>
-          <p>Looks up a Tempus player and suggests maps for practice, a step up, or maps more likely to matter for rank. Finished maps are read from Tempus Plaza for this visit and left out. This site does not keep a copy. The tier band is still a suggestion from class rank and completion count.</p>
+          <p>Looks up a Tempus player and suggests maps to practice, a step up, or points toward the next rank. Finished maps, class, group, and points come from Tempus Plaza for this visit. This site does not keep a copy. The points goal uses the Tempus Plaza calculator and stays near tiers that player already finishes. Raise the tier limit when a harder map is intentional.</p>
         </div>
         <form class="filter-bar recommend-form" id="recommend-form">
           <label>Tempus player
@@ -124,6 +124,11 @@
           <button type="button" data-goal="points" aria-pressed="false">Points</button>
         </div>
         <p id="recommend-status" class="filter-count"></p>
+        <div id="recommend-refine" hidden>
+          <p id="suggest-cap-label" class="filter-count">Highest tier</p>
+          <div class="tier-cap" id="suggest-cap" role="toolbar" aria-label="Highest tier to suggest"></div>
+          <div class="pick-list" id="suggest-tags" role="toolbar" aria-label="Map tags"></div>
+        </div>
         <div class="pick-list" id="recommend-picks"></div>
         <div id="recommend-results"></div>
       </section>

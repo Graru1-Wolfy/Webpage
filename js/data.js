@@ -10,12 +10,19 @@
   TF2.passwordRetrieved = "";
   TF2.loadError = "";
   TF2.plazaRelay = "https://tf2-hub-plaza-relay.confusion-quartz.workers.dev";
+  try {
+    if ((location.hostname === "127.0.0.1" || location.hostname === "localhost") && /(?:\?|&)local-relay=1(?:&|$)/.test(location.search)) {
+      TF2.plazaRelay = "http://127.0.0.1:8787";
+    }
+  } catch (error) {
+    /* Keep the published relay when location is unavailable. */
+  }
 
   TF2.loadPlazaRecords = function (playerId) {
     var id = String(playerId == null ? "" : playerId);
     if (!/^[1-9][0-9]{0,9}$/.test(id) || !TF2.plazaRelay) return Promise.reject(new Error("relay"));
     var controller = typeof AbortController === "function" ? new AbortController() : null;
-    var timer = controller ? setTimeout(function () { controller.abort(); }, 20000) : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, 25000) : null;
     return fetch(TF2.plazaRelay.replace(/\/$/, "") + "/player-records", {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=UTF-8", Accept: "application/json" },
@@ -31,7 +38,11 @@
       throw error;
     }).then(function (data) {
       if (!data || !Array.isArray(data.records)) throw new Error("relay");
-      return data.records;
+      return {
+        records: data.records,
+        maps: Array.isArray(data.maps) ? data.maps : [],
+        ranks: data.ranks && typeof data.ranks === "object" ? data.ranks : null
+      };
     });
   };
 

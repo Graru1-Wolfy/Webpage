@@ -1578,6 +1578,37 @@ h1.page-title {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
+.tier-cap {
+  display: grid;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.tier-cap button {
+  min-height: 44px;
+  padding: 8px 2px;
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.tier-cap button[aria-pressed="true"] {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: transparent;
+}
+
+.pick-list button[aria-pressed="true"] {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: transparent;
+}
+
 .pick-list {
   display: flex;
   flex-wrap: wrap;
@@ -1602,6 +1633,10 @@ h1.page-title {
 }
 
 @media (max-width: 720px) {
+  .tier-cap {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
   .map-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;

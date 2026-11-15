@@ -36,6 +36,94 @@ var finished = TF2.finishedMapNames([
   { map: "jump_other", class: "scout" }
 ], "soldier");
 assert("finished names keep the selected class", finished.jump_beef === true && !finished.jump_other && !finished["jump bad"]);
+var courseOnly = TF2.finishedMapNames([{ map: "jump_beef", class: "soldier", type: "course" }], "soldier");
+assert("course finish is not a map finish", !courseOnly.jump_beef);
+assert("plaza completion points", TF2.plazaPoints("map", 1, 1, 15) === 1 && TF2.plazaPoints("map", 3, 4, 15) === 5 && TF2.plazaPoints("map", 4, 1, 15) === 10);
+assert("plaza world record points", TF2.plazaPoints("map", 1, 1, 1) === 1001);
+assert("plaza group four points", TF2.plazaPoints("map", 1, 1, 14) === 3);
+assert("group names", TF2.groupName(1) === "WR" && TF2.groupName(5) === "TT" && TF2.groupName(12) === "G2" && TF2.groupName(15) === "G5");
+assert("points text", TF2.formatPoints(2.93) === "2.93" && TF2.formatPoints(5) === "5" && TF2.formatPoints(2.5) === "2.5");
+var tierRecords = [
+  { map: "jump_done", class: "soldier", type: "map", tier: 3, rating: 4, placement: 15, points: 5 },
+  { map: "jump_two", class: "soldier", type: "map", tier: 3, rating: 4, placement: 15, points: 5 },
+  { map: "jump_three", class: "soldier", type: "map", tier: 3, rating: 4, placement: 15, points: 5 },
+  { map: "jump_high", class: "soldier", type: "map", tier: 6, rating: 1, placement: 15, points: 50 }
+];
+assert("comfortable tier ignores a rare high finish", TF2.establishedTier(tierRecords, "soldier") === 3);
+var bulk = [];
+function addFinishes(tier, count) {
+  for (var i = 0; i < count; i++) {
+    bulk.push({ map: "t" + tier + "_" + i, class: "soldier", type: "map", tier: tier, placement: 15 });
+  }
+}
+addFinishes(1, 80);
+addFinishes(2, 81);
+addFinishes(3, 119);
+addFinishes(4, 52);
+addFinishes(5, 7);
+addFinishes(6, 3);
+assert("a few high finishes do not set the comfortable tier", TF2.establishedTier(bulk, "soldier") === 4);
+assert("one finish still sets a tier", TF2.establishedTier([{ map: "jump_only", class: "soldier", type: "map", tier: 4, placement: 15 }], "soldier") === 4);
+assert("automatic points cap is two tiers up", TF2.tierCap(3, "points", null) === 5);
+assert("automatic practice cap stays put", TF2.tierCap(3, "practice", null) === 3);
+assert("chosen tier overrides the cap", TF2.tierCap(3, "points", 4) === 4);
+assert("next rank gap", TF2.formatPoints(TF2.pointsGap({ soldier: { rank: 1174, points: 2447.73, next_points: 2450.66 } }, "soldier")) === "2.93");
+var catalog = [
+  { name: "jump_done", s: 3, sr: 4 },
+  { name: "jump_a", s: 8, sr: 1 },
+  { name: "jump_b", s: 6, sr: 1 },
+  { name: "jump_c", s: 4, sr: 4 }
+];
+var plazaMaps = [
+  { name: "jump_a", soldier_tier: 3, soldier_rating: 1, tags: [{ name: "Wallshot", class: "soldier" }] },
+  { name: "jump_b", soldier_tier: 6, soldier_rating: 1, tags: [{ name: "Mixed", class: "both" }] },
+  { name: "jump_c", soldier_tier: 4, soldier_rating: 4, tags: [{ name: "Mixed", class: "both" }] }
+];
+var covered = TF2.selectSuggestions(catalog, {
+  jumpClass: "soldier",
+  goal: "points",
+  records: tierRecords,
+  plazaMaps: plazaMaps,
+  maxTier: null,
+  tags: [],
+  gap: 2.93
+});
+assert("comfortable tier covers the gap", covered.items.length === 1 && covered.items[0].map.name === "jump_a" && covered.items[0].points === 5);
+assert("suggestion cap", covered.established === 3 && covered.cap === 5);
+var step = TF2.selectSuggestions([
+  { name: "jump_c", s: 4, sr: 4 },
+  { name: "jump_b", s: 6, sr: 1 }
+], {
+  jumpClass: "soldier",
+  goal: "points",
+  records: tierRecords,
+  plazaMaps: plazaMaps,
+  maxTier: null,
+  tags: [],
+  gap: 2.93
+});
+assert("one tier up when the comfortable tier cannot cover", step.items.length === 1 && step.items[0].map.name === "jump_c");
+var raised = TF2.selectSuggestions(catalog, {
+  jumpClass: "soldier",
+  goal: "points",
+  records: tierRecords,
+  plazaMaps: plazaMaps,
+  maxTier: 8,
+  tags: ["Wallshot"],
+  gap: 2.93
+});
+assert("tag filter keeps the comfortable map", raised.items.length === 1 && raised.items[0].map.name === "jump_a" && raised.items[0].tags[0] === "Wallshot");
+var groupRecords = tierRecords.map(function (row) { return Object.assign({}, row, { placement: 11 }); });
+var grouped = TF2.selectSuggestions([{ name: "jump_new", s: 3, sr: 1 }], {
+  jumpClass: "soldier",
+  goal: "points",
+  records: groupRecords,
+  plazaMaps: [],
+  maxTier: null,
+  tags: [],
+  gap: 2.93
+});
+assert("usual group changes the calculator", grouped.items[0].group === "G1" && grouped.items[0].points === 55);
 
 var academy = TF2.describeServer({
   name: "jumpacademy.tf | S4-D4 | US East",
