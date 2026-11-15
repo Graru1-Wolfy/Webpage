@@ -132,6 +132,9 @@
   }
 
   applyTheme(document.documentElement.dataset.theme || "dark", false);
+  setSnapshotDate("jump-updated", typeof JumpData !== "undefined" ? JumpData.updated : "");
+  setSnapshotDate("community-updated", typeof ServerData !== "undefined" && ServerData.overview ? ServerData.overview.updated : "");
+  setSnapshotDate("servers-updated", typeof ServerData !== "undefined" && ServerData.overview ? ServerData.overview.updated : "");
   try {
     renderServers();
   } catch (error) {
@@ -182,7 +185,7 @@
     document.documentElement.dataset.theme = theme;
     document.getElementById("theme-color").setAttribute("content", theme === "dark" ? "#14121c" : "#F4F2FA");
     themeToggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
-    themeToggle.textContent = theme === "dark" ? "Light mode" : "Dark mode";
+    themeToggle.textContent = "Dark theme";
     if (persist) {
       try {
         localStorage.setItem("tf2-theme", theme);
@@ -194,10 +197,12 @@
 
   function renderMaps() {
     var filters = ["All"].concat(unique(maps.map(function (map) { return map.mode; })));
-    mapFilters.innerHTML = filters.map(function (name) {
-      var pressed = name === mapFilter;
-      return '<button type="button" data-filter="' + name + '" aria-pressed="' + pressed + '">' + name + "</button>";
-    }).join("");
+    if (mapFilters.childElementCount !== filters.length) {
+      mapFilters.innerHTML = filters.map(function (name) {
+        return '<button type="button" data-filter="' + escapeHtml(name) + '">' + escapeHtml(name) + "</button>";
+      }).join("");
+    }
+    pressButtons(mapFilters, "data-filter", mapFilter);
 
     mapGrid.innerHTML = maps.filter(function (map) {
       return mapFilter === "All" || map.mode === mapFilter;
@@ -228,6 +233,7 @@
       { id: "5", label: "Tier 5" },
       { id: "6", label: "Tier 6+" }
     ];
+    var tierFocus = focusedValue(jumpTierBar, "data-tier");
     jumpTierBar.innerHTML = tiers.map(function (tier) {
       var count = maps.filter(function (map) {
         return matchesJump(map, filters, tier.id);
@@ -236,6 +242,7 @@
       return '<button type="button" data-tier="' + tier.id + '" aria-pressed="' + pressed + '"><strong>' +
         count + '</strong><span>' + tier.label + "</span></button>";
     }).join("");
+    focusButton(jumpTierBar, "data-tier", tierFocus);
 
     var visible = maps.filter(function (map) {
       return matchesJump(map, filters, jumpTier);
@@ -424,7 +431,9 @@
       var aPlayers = a.online ? a.players || 0 : -1;
       var bPlayers = b.online ? b.players || 0 : -1;
       if (bPlayers !== aPlayers) return bPlayers - aPlayers;
-      return a.latency - b.latency;
+      var aLatency = a.latency == null ? 9999 : a.latency;
+      var bLatency = b.latency == null ? 9999 : b.latency;
+      return aLatency - bLatency;
     });
 
     filterCount.textContent = visible.length + " of " + servers.length + " servers";
@@ -441,12 +450,12 @@
       var players = server.online ? (server.players || 0) + "/" + (server.maxPlayers || "?") : "Offline";
       return "<tr>" +
         '<td data-label="Server"><strong>' + escapeHtml(server.name) + '</strong><span class="class-role">' + escapeHtml(server.communityLabel) + "</span></td>" +
-        '<td data-label="Region">' + escapeHtml(server.region) + "</td>" +
-        '<td data-label="Tier">' + escapeHtml(server.tier) + "</td>" +
+        '<td data-label="Region">' + escapeHtml(regionText(server)) + "</td>" +
+        '<td data-label="Est. tier">' + escapeHtml(server.tier) + "</td>" +
         '<td data-label="Rank">' + escapeHtml(server.rankLabel) + "</td>" +
         '<td data-label="Map">' + escapeHtml(server.map || "—") + "</td>" +
         '<td data-label="Players">' + players + "</td>" +
-        '<td data-label="Latency">~' + server.latency + " ms</td>" +
+        '<td data-label="Est. latency">' + (server.latency == null ? "—" : "est. " + server.latency + " ms") + "</td>" +
         '<td data-label="Address"><a href="' + escapeHtml(server.url) + '">' + escapeHtml(server.address) + "</a></td>" +
       "</tr>";
     }).join("");
@@ -454,7 +463,7 @@
 
   function matches(server, filters) {
     if (filters.region !== "all" && server.region !== filters.region) return false;
-    if (filters.latency !== "all" && server.latency > Number(filters.latency)) return false;
+    if (filters.latency !== "all" && (server.latency == null || server.latency > Number(filters.latency))) return false;
     if (filters.tier !== "all" && server.tier !== filters.tier) return false;
     if (filters.community !== "all" && server.category !== filters.community) return false;
     if (filters.rank === "open" && server.rankLimit !== null) return false;
@@ -471,7 +480,7 @@
 
   function describeServer(server) {
     var region = regionFor(server);
-    var rankLimit = rankLimitFor(server.name);
+    var rank = rankLimitFor(server.name);
     return {
       name: server.name,
       address: server.address,
@@ -482,31 +491,45 @@
       url: server.url,
       category: server.category,
       communityLabel: server.category === "tempus" ? "Tempus" : "Jump Academy",
-      region: region,
-      latency: latencyByRegion[region] || 250,
+      region: region.name,
+      regionSource: region.source,
+      latency: region.source === "unknown" ? null : latencyByRegion[region.name] || null,
       tier: tierFor(server),
-      rankLimit: rankLimit,
-      rankLabel: rankLimit === null ? "Open" : "Top " + rankLimit
+      rankLimit: rank.limit,
+      rankSource: rank.source,
+      rankLabel: rankLabel(rank)
     };
   }
 
+  function regionText(server) {
+    if (server.regionSource === "unknown") return "Not stated";
+    if (server.regionSource === "name") return server.region + " · from name";
+    return server.region;
+  }
+
   function regionFor(server) {
-    if (server.country && regionByCountry[server.country]) return regionByCountry[server.country];
+    if (server.country && regionByCountry[server.country]) return { name: regionByCountry[server.country], source: "country" };
     var name = server.name;
-    if (/\| KOR\b| Asia/.test(name)) return "Asia";
-    if (/\| AU\b/.test(name)) return "Oceania";
-    if (/\| EU\b/.test(name)) return "Europe";
-    if (/US East|US West|US Central/.test(name)) return "North America";
-    return "North America";
+    if (/\| KOR\b| Asia/.test(name)) return { name: "Asia", source: "name" };
+    if (/\| AU\b/.test(name)) return { name: "Oceania", source: "name" };
+    if (/\| EU\b/.test(name)) return { name: "Europe", source: "name" };
+    if (/US East|US West|US Central/.test(name)) return { name: "North America", source: "name" };
+    return { name: "Not stated", source: "unknown" };
   }
 
   function rankLimitFor(name) {
     var match = name.match(/Rank (\d+)/i);
-    if (match) return Number(match[1]);
+    if (match) return { limit: Number(match[1]), source: "name" };
     var skill = name.match(/S(\d)/);
-    if (skill && Number(skill[1]) >= 5) return 100;
-    if (skill && Number(skill[1]) >= 4) return 200;
-    return null;
+    if (skill && Number(skill[1]) >= 5) return { limit: 100, source: "heuristic" };
+    if (skill && Number(skill[1]) >= 4) return { limit: 200, source: "heuristic" };
+    return { limit: null, source: "unknown" };
+  }
+
+  function rankLabel(rank) {
+    if (rank.source === "name") return "Top " + rank.limit;
+    if (rank.source === "heuristic") return "Est. top " + rank.limit;
+    return "Not stated";
   }
 
   function tierFor(server) {
@@ -529,6 +552,39 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  function setSnapshotDate(id, iso) {
+    var node = document.getElementById(id);
+    if (!node || !/^\d{4}-\d{2}-\d{2}$/.test(iso || "")) return;
+    var parts = iso.split("-");
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    node.textContent = Number(parts[2]) + " " + months[Number(parts[1]) - 1] + " " + parts[0];
+    node.setAttribute("datetime", iso);
+  }
+
+  function pressButtons(bar, attr, value) {
+    if (!bar) return;
+    Array.prototype.forEach.call(bar.querySelectorAll("[" + attr + "]"), function (button) {
+      button.setAttribute("aria-pressed", button.getAttribute(attr) === value ? "true" : "false");
+    });
+  }
+
+  function focusedValue(bar, attr) {
+    var active = document.activeElement;
+    if (!bar || !active || !bar.contains(active)) return "";
+    return active.getAttribute(attr) || "";
+  }
+
+  function focusButton(bar, attr, value) {
+    if (!bar || !value) return;
+    var buttons = bar.querySelectorAll("[" + attr + "]");
+    for (var i = 0; i < buttons.length; i++) {
+      if (buttons[i].getAttribute(attr) === value) {
+        buttons[i].focus();
+        return;
+      }
+    }
   }
 
   function unique(list) {
