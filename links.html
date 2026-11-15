@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Links · TF2 Hub</title>
+    <meta name="description" content="Official Team Fortress 2 links and Tempus server files.">
+    <meta id="theme-color" name="theme-color" content="#14121c">
+    <script>
+      var theme = "dark";
+      try {
+        var savedTheme = localStorage.getItem("tf2-theme");
+        if (savedTheme === "light" || savedTheme === "dark") theme = savedTheme;
+        else if (window.matchMedia("(prefers-color-scheme: light)").matches) theme = "light";
+      } catch (error) {}
+      document.documentElement.dataset.theme = theme;
+      document.getElementById("theme-color").setAttribute("content", theme === "dark" ? "#14121c" : "#F4F2FA");
+    </script>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"></span>TF2 Hub</a>
+        <nav class="site-nav" aria-label="Pages">
+          <a href="index.html">Home</a>
+          <a href="maps.html">Maps</a>
+          <a href="records.html">Records</a>
+          <a href="ranks.html">Ranks</a>
+          <a href="servers.html">Servers</a>
+          <a href="encyclopedia.html">Encyclopedia</a>
+          <a href="links.html" aria-current="page">Links</a>
+        </nav>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="true">Dark theme</button>
+      </div>
+    </header>
+    <main id="main" class="wrap preview-section">
+      <div class="section-head">
+        <h1 class="page-title">Links</h1>
+        <p>Valve’s own pages for the game, the blog, and the community wiki.</p>
+      </div>
+      <ul class="link-list">
+        <li><a href="https://www.teamfortress.com/">teamfortress.com</a><span>Official site and blog</span></li>
+        <li><a href="https://wiki.teamfortress.com/">Team Fortress Wiki</a><span>Items, maps, and patch history</span></li>
+        <li><a href="https://store.steampowered.com/app/440/Team_Fortress_2/">Steam store page</a><span>Download the free game</span></li>
+      </ul>
+      <div class="section-head jump-files-head">
+        <h2>Server files</h2>
+        <p>Builds linked from <a href="https://static.tempus2.xyz/public/">static.tempus2.xyz/public</a>. Each date is the file date recorded here, not a check that the file is the newest build.</p>
+      </div>
+      <div class="jump-files">
+        <section>
+          <h3>Physics</h3>
+          <ul class="link-list">
+            <li><a href="https://static.tempus2.xyz/public/jumpqol_vphysics_linux_006.zip">Jump QoL vphysics, Linux 006</a><span>121 KiB · 22 Apr 2026</span></li>
+            <li><a href="https://static.tempus2.xyz/public/jumpqol_vphysics_002.zip">Jump QoL vphysics 002</a><span>121 KiB · 13 Dec 2025</span></li>
+          </ul>
+        </section>
+        <section>
+          <h3>Collision</h3>
+          <ul class="link-list">
+            <li><a href="https://static.tempus2.xyz/public/collisionhook-3829a5b.zip">Collision hook 3829a5b</a><span>482 KiB · 19 Apr 2024</span></li>
+          </ul>
+        </section>
+        <section>
+          <h3>Plugins</h3>
+          <ul class="link-list">
+            <li><a href="https://static.tempus2.xyz/public/sendvaredit-256dcb5.zip">SendVarEdit 256dcb5</a><span>550 KiB · 19 Apr 2024</span></li>
+            <li><a href="https://static.tempus2.xyz/public/source-python-data.zip">Source Python data</a><span>127 KiB · 17 Apr 2025</span></li>
+            <li><a href="https://static.tempus2.xyz/public/updater.smx">Updater</a><span>22 KiB · 23 Mar 2023</span></li>
+          </ul>
+        </section>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <div>
+          <p class="logo">TF2 Hub</p>
+          <p class="muted">Unofficial fan page. Team Fortress 2 is a trademark of Valve Corporation. This site is not affiliated with or endorsed by Valve.</p>
+        </div>
+        <div>
+          <p class="footer-label">Pages</p>
+          <a href="encyclopedia.html">Encyclopedia</a>
+          <a href="maps.html">Maps</a>
+        </div>
+        <div>
+          <p class="footer-label">Repository</p>
+          <a href="https://github.com/Graru1-Wolfy/Webpage">Graru1-Wolfy/Webpage</a>
+        </div>
+      </div>
+    </footer>
+    <script src="js/common.js"></script>
+  </body>
+</html>

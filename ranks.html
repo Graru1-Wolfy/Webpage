@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Ranks · TF2 Hub</title>
+    <meta name="description" content="Top Tempus jump ranks for overall, Soldier, and Demoman.">
+    <meta id="theme-color" name="theme-color" content="#14121c">
+    <script>
+      var theme = "dark";
+      try {
+        var savedTheme = localStorage.getItem("tf2-theme");
+        if (savedTheme === "light" || savedTheme === "dark") theme = savedTheme;
+        else if (window.matchMedia("(prefers-color-scheme: light)").matches) theme = "light";
+      } catch (error) {}
+      document.documentElement.dataset.theme = theme;
+      document.getElementById("theme-color").setAttribute("content", theme === "dark" ? "#14121c" : "#F4F2FA");
+    </script>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"></span>TF2 Hub</a>
+        <nav class="site-nav" aria-label="Pages">
+          <a href="index.html">Home</a>
+          <a href="maps.html">Maps</a>
+          <a href="records.html">Records</a>
+          <a href="ranks.html" aria-current="page">Ranks</a>
+          <a href="servers.html">Servers</a>
+          <a href="encyclopedia.html">Encyclopedia</a>
+          <a href="links.html">Links</a>
+        </nav>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="true">Dark theme</button>
+      </div>
+    </header>
+    <main id="main" class="wrap preview-section">
+      <div class="section-head">
+        <h1 class="page-title">Ranks</h1>
+        <p>The top 50 players from the Tempus rank lists. This is a partial list, not the full leaderboard.</p>
+        <p id="jump-status">Loading Tempus ranks.</p>
+      </div>
+      <div class="modes jump-switch" id="jump-ranks" role="toolbar" aria-label="Rank list">
+        <button type="button" data-rank="overall" aria-pressed="true">Overall</button>
+        <button type="button" data-rank="soldier" aria-pressed="false">Soldier</button>
+        <button type="button" data-rank="demoman" aria-pressed="false">Demoman</button>
+      </div>
+      <p class="filter-count" id="jump-rank-count"></p>
+      <div class="server-scroll">
+        <table class="server-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Player</th>
+              <th>Points</th>
+            </tr>
+          </thead>
+          <tbody id="jump-rank-rows"></tbody>
+        </table>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <div>
+          <p class="logo">TF2 Hub</p>
+          <p class="muted">Unofficial fan page. Team Fortress 2 is a trademark of Valve Corporation. This site is not affiliated with or endorsed by Valve.</p>
+        </div>
+        <div>
+          <p class="footer-label">Pages</p>
+          <a href="maps.html">Maps</a>
+          <a href="records.html">Records</a>
+        </div>
+        <div>
+          <p class="footer-label">Repository</p>
+          <a href="https://github.com/Graru1-Wolfy/Webpage">Graru1-Wolfy/Webpage</a>
+        </div>
+      </div>
+    </footer>
+    <script src="js/logic.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/ranks.js"></script>
+  </body>
+</html>

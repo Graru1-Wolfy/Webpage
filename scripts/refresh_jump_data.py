@@ -111,6 +111,7 @@ def parse_academy_addresses(html):
             "players": 0,
             "maxPlayers": None,
             "online": False,
+            "password": None,
             "country": country,
             "location": location,
         })
@@ -147,13 +148,18 @@ def query_a2s(address, timeout=2.0):
         index += 2
         if appid != 440 and folder != "tf":
             return None
+        if index + 5 >= len(data):
+            return None
         players = data[index]
         max_players = data[index + 1]
+        # A2S visibility: 0 is public, 1 means the server asks for a password.
+        visibility = data[index + 5]
         return {
             "name": name,
             "map": map_name,
             "players": int(players),
             "maxPlayers": int(max_players),
+            "password": visibility == 1,
             "online": True,
         }
     except (socket.timeout, OSError, ValueError, IndexError, UnicodeError):
@@ -179,11 +185,48 @@ def apply_a2s(servers):
                 server["map"] = info["map"]
                 server["players"] = info["players"]
                 server["maxPlayers"] = info["maxPlayers"]
+                server["password"] = bool(info["password"])
                 server["online"] = True
                 break
     if answered < 5:
         raise RuntimeError("Steam server query answered %s Jump Academy servers" % answered)
     return answered
+
+
+def tempus_addresses(servers):
+    found = []
+    seen = set()
+    for item in servers:
+        info = item.get("server_info") if isinstance(item, dict) else None
+        if not isinstance(info, dict) or info.get("hidden"):
+            continue
+        host = info.get("ipAddr") or info.get("addr")
+        port = info.get("port")
+        if not isinstance(host, str) or not isinstance(port, int):
+            continue
+        if not re.match(r"^[A-Za-z0-9.-]+$", host):
+            continue
+        address = "%s:%s" % (host, port)
+        if address in seen:
+            continue
+        seen.add(address)
+        found.append(address)
+    return found
+
+
+def query_password_flags(addresses):
+    def query_one(address):
+        info = query_a2s(address)
+        if not info:
+            return None
+        return {"address": address, "password": bool(info["password"])}
+
+    found = []
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        for item in pool.map(query_one, addresses):
+            if item:
+                found.append(item)
+    return found
 
 
 def write_json(path, payload):
@@ -231,12 +274,23 @@ def main():
         "source": ACADEMY,
         "query": "A2S_INFO",
         "retrieved": retrieved,
-        "note": "Addresses are parsed from the Jump Academy servers page. Name, map, and player counts are from a Steam server query of those addresses.",
+        "note": "Addresses are parsed from the Jump Academy servers page. Name, map, player counts, and password come from a Steam server query of those addresses.",
         "servers": academy,
     })
+    passwords = query_password_flags(tempus_addresses(servers))
+    if len(passwords) >= 5:
+        write_json(DATA / "server-passwords.json", {
+            "source": "A2S_INFO",
+            "retrieved": retrieved,
+            "note": "password true means the Steam query reported a private server. Addresses that did not answer are omitted.",
+            "servers": passwords,
+        })
+    else:
+        print("Left server-passwords.json unchanged; %s Tempus servers answered." % len(passwords), file=sys.stderr)
     online = sum(1 for server in academy if server["online"])
-    print("Wrote %s maps, %s Tempus servers, %s Jump Academy addresses (%s answered, %s online)" % (
-        len(maps), len(servers), len(academy), answered, online))
+    locked = sum(1 for server in academy if server.get("password") is True)
+    print("Wrote %s maps, %s Tempus servers, %s Jump Academy addresses (%s answered, %s online, %s password)" % (
+        len(maps), len(servers), len(academy), answered, online, locked))
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>TF2 Hub</title>
-    <meta name="description" content="Jump maps, records, ranks, and Tempus and Jump Academy servers for Team Fortress 2.">
+    <meta name="description" content="A hub for Team Fortress 2 jump maps, records, ranks, and Tempus and Jump Academy servers.">
     <meta id="theme-color" name="theme-color" content="#14121c">
     <script>
       var theme = "dark";
@@ -28,335 +28,53 @@
     <a class="skip" href="#main">Skip to content</a>
     <header class="site-header">
       <div class="wrap header-inner">
-        <h1 class="logo">
-          <a href="#jump">
-            <span class="logo-mark" aria-hidden="true"></span>
-            TF2 Hub
-          </a>
-        </h1>
-        <nav class="site-nav" aria-label="Page">
-          <a href="#jump">Jump</a>
-          <a href="#community">Servers</a>
-          <a href="#encyclopedia">Encyclopedia</a>
-          <a href="#links">Links</a>
+        <a class="logo" href="index.html">
+          <span class="logo-mark" aria-hidden="true"></span>
+          TF2 Hub
+        </a>
+        <nav class="site-nav" aria-label="Pages">
+          <a href="index.html" aria-current="page">Home</a>
+          <a href="maps.html">Maps</a>
+          <a href="records.html">Records</a>
+          <a href="ranks.html">Ranks</a>
+          <a href="servers.html">Servers</a>
+          <a href="encyclopedia.html">Encyclopedia</a>
+          <a href="links.html">Links</a>
         </nav>
         <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="true">Dark theme</button>
       </div>
     </header>
-
-    <main id="main">
-      <section class="wrap preview-section" id="jump">
-        <div class="section-head">
-          <h2>Jump</h2>
-          <p>Maps, recent records, and ranks from the <a href="https://tempus2.xyz/apidocs/">Tempus API</a>. Tier 1 is the easiest. Ratings are Good, Decent, Poor, and Bad. The type filter uses the map name prefix, not a separate Tempus field.</p>
-          <p id="jump-status">Loading the Tempus catalog, records, and ranks.</p>
-        </div>
-        <div class="modes" id="jump-class" role="toolbar" aria-label="Class">
-          <button type="button" data-class="soldier" aria-pressed="true">Soldier</button>
-          <button type="button" data-class="demoman" aria-pressed="false">Demoman</button>
-        </div>
-        <div class="jump-tiers" id="jump-tiers" role="toolbar" aria-label="Tier"></div>
-        <form class="filter-bar jump-filters" id="jump-filters">
-            <label>Name prefix
-            <select name="type" aria-label="Type from the map name">
-              <option value="all">All</option>
-              <option value="rocket">Rocket jump</option>
-              <option value="sticky">Sticky jump</option>
-              <option value="conc">Conc</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
-          <label>Rating
-            <select name="rating" aria-label="Rating">
-              <option value="all">Any</option>
-              <option value="1">Good</option>
-              <option value="2">Decent</option>
-              <option value="3">Poor</option>
-              <option value="4">Bad</option>
-            </select>
-          </label>
-          <label>Layout
-            <select name="layout" aria-label="Layout">
-              <option value="all">Any</option>
-              <option value="bonus">Bonuses</option>
-              <option value="course">Courses</option>
-              <option value="trick">Tricks</option>
-              <option value="linear">Linear</option>
-            </select>
-          </label>
-        </form>
-        <p class="filter-count" id="jump-count"></p>
-        <div class="server-scroll">
-          <table class="server-table">
-            <thead>
-              <tr>
-                <th>Map</th>
-                <th>Soldier</th>
-                <th>Demoman</th>
-                <th>Layout</th>
-              </tr>
-            </thead>
-            <tbody id="jump-rows"></tbody>
-          </table>
-        </div>
-        <div class="section-head jump-files-head">
-          <h3>Recent records</h3>
-          <p>Jump world records and top map times from the <a href="https://tempus2.xyz/api/v0/activity">Tempus activity feed</a>.</p>
-        </div>
-        <div class="modes jump-switch" id="jump-activity" role="toolbar" aria-label="Record type">
-          <button type="button" data-activity="map_wrs" aria-pressed="true">Map records</button>
-          <button type="button" data-activity="course_wrs" aria-pressed="false">Courses</button>
-          <button type="button" data-activity="bonus_wrs" aria-pressed="false">Bonuses</button>
-          <button type="button" data-activity="trick_wrs" aria-pressed="false">Tricks</button>
-          <button type="button" data-activity="map_tops" aria-pressed="false">Top times</button>
-        </div>
-        <p class="filter-count" id="jump-activity-count"></p>
-        <div class="server-scroll">
-          <table class="server-table">
-            <thead>
-              <tr>
-                <th>Place</th>
-                <th>Player</th>
-                <th>Map</th>
-                <th>Zone</th>
-                <th>Class</th>
-                <th>Time</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody id="jump-activity-rows"></tbody>
-          </table>
-        </div>
-        <div class="section-head jump-files-head">
-          <h3>Ranks</h3>
-          <p>The top 50 players from the Tempus rank lists.</p>
-        </div>
-        <div class="modes jump-switch" id="jump-ranks" role="toolbar" aria-label="Rank list">
-          <button type="button" data-rank="overall" aria-pressed="true">Overall</button>
-          <button type="button" data-rank="soldier" aria-pressed="false">Soldier</button>
-          <button type="button" data-rank="demoman" aria-pressed="false">Demoman</button>
-        </div>
-        <p class="filter-count" id="jump-rank-count"></p>
-        <div class="server-scroll">
-          <table class="server-table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Player</th>
-                <th>Points</th>
-              </tr>
-            </thead>
-            <tbody id="jump-rank-rows"></tbody>
-          </table>
-        </div>
-        <div class="section-head jump-files-head">
-          <h3>Server files</h3>
-          <p>Builds linked from <a href="https://static.tempus2.xyz/public/">static.tempus2.xyz/public</a>. Each date is the file date recorded here, not a check that the file is the newest build.</p>
-        </div>
-        <div class="jump-files">
-          <section>
-            <h3>Physics</h3>
-            <ul class="link-list">
-              <li><a href="https://static.tempus2.xyz/public/jumpqol_vphysics_linux_006.zip">Jump QoL vphysics, Linux 006</a><span>121 KiB · 22 Apr 2026</span></li>
-              <li><a href="https://static.tempus2.xyz/public/jumpqol_vphysics_002.zip">Jump QoL vphysics 002</a><span>121 KiB · 13 Dec 2025</span></li>
-            </ul>
-          </section>
-          <section>
-            <h3>Collision</h3>
-            <ul class="link-list">
-              <li><a href="https://static.tempus2.xyz/public/collisionhook-3829a5b.zip">Collision hook 3829a5b</a><span>482 KiB · 19 Apr 2024</span></li>
-            </ul>
-          </section>
-          <section>
-            <h3>Plugins</h3>
-            <ul class="link-list">
-              <li><a href="https://static.tempus2.xyz/public/sendvaredit-256dcb5.zip">SendVarEdit 256dcb5</a><span>550 KiB · 19 Apr 2024</span></li>
-              <li><a href="https://static.tempus2.xyz/public/source-python-data.zip">Source Python data</a><span>127 KiB · 17 Apr 2025</span></li>
-              <li><a href="https://static.tempus2.xyz/public/updater.smx">Updater</a><span>22 KiB · 23 Mar 2023</span></li>
-            </ul>
-          </section>
-        </div>
-      </section>
-
-      <section class="band" id="community">
-        <div class="wrap">
-          <div class="section-head">
-            <h2>Jump servers</h2>
-            <p id="server-status">Loading Tempus and Jump Academy status.</p>
-            <p>Counts include only Tempus and Jump Academy. Jump Academy addresses come from their servers page. The name, map, and player count for each address come from a Steam server query, not from that page. Latency is a regional estimate, not a measured ping. Tier is inferred from the server name. Rank is copied when the name says “Rank N”; an S-code rank is an estimate, and a missing rank is not stated. Tempus region groups the API country. Jump Academy region groups the location on the Jump Academy servers page. An address opens a Steam connect link.</p>
-          </div>
-          <div class="metrics" id="community-stats"></div>
-          <div class="card-grid region-grid" id="region-grid"></div>
-          <form class="filter-bar" id="server-filters">
-            <label>Region
-              <select name="region" aria-label="Region">
-                <option value="all">All</option>
-                <option>Europe</option>
-                <option>North America</option>
-                <option>Asia</option>
-                <option>Oceania</option>
-                <option>South America</option>
-                <option>Africa</option>
-              </select>
-            </label>
-            <label>Est. latency
-              <select name="latency" aria-label="Estimated latency">
-                <option value="all">Any</option>
-                <option value="80">Under 80 ms</option>
-                <option value="150">Under 150 ms</option>
-                <option value="250">Under 250 ms</option>
-              </select>
-            </label>
-            <label>Est. tier
-              <select name="tier" aria-label="Estimated tier">
-                <option value="all">Any</option>
-                <option>Beginner</option>
-                <option>Intermediate</option>
-                <option>Advanced</option>
-                <option>Mixed</option>
-              </select>
-            </label>
-            <label>Community
-              <select name="community" aria-label="Community">
-                <option value="all">All</option>
-                <option value="tempus">Tempus</option>
-                <option value="jumpacademy">Jump Academy</option>
-              </select>
-            </label>
-            <label>Rank
-              <select name="rank" aria-label="Rank">
-                <option value="all">Any</option>
-                <option value="open">Not stated</option>
-                <option value="1000">Top 1000</option>
-                <option value="500">Top 500</option>
-                <option value="200">Top 200</option>
-                <option value="100">Top 100</option>
-                <option value="50">Top 50</option>
-              </select>
-            </label>
-            <label>Top players
-              <select name="players" aria-label="Top players">
-                <option value="all">Any</option>
-                <option value="1">1 or more</option>
-                <option value="5">5 or more</option>
-                <option value="8">8 or more</option>
-              </select>
-            </label>
-          </form>
-          <p class="filter-count" id="filter-count"></p>
-          <div class="server-scroll">
-            <table class="server-table">
-              <thead>
-                <tr>
-                  <th>Server</th>
-                  <th>Region</th>
-                  <th>Est. tier</th>
-                  <th>Rank</th>
-                  <th>Map</th>
-                  <th>Players</th>
-                  <th>Est. latency</th>
-                  <th>Address</th>
-                </tr>
-              </thead>
-              <tbody id="server-rows"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <section class="wrap preview-section" id="encyclopedia">
-        <div class="section-head">
-          <h2>Jump encyclopedia</h2>
-          <p>Websites and Discord servers from <a href="https://docs.google.com/spreadsheets/d/1kL76rEPL2AtMSu5RWI2VtW5ZJ2QIQx61BNowdfN-09M/htmlview#gid=1264642306">ShadowOfLight’s Jump Encyclopedia</a>.</p>
-        </div>
-        <div class="encyclopedia">
-          <div>
-            <h3>Websites</h3>
-            <section>
-              <h4>Tempus</h4>
-              <ul class="link-list">
-                <li><a href="https://tempus2.xyz">Tempus Network</a></li>
-                <li><a href="https://tempusplaza.com">Tempus Plaza</a></li>
-                <li><a href="https://www.youtube.com/watch?v=-X00KqLJuPg">Tempus point system</a></li>
-                <li><a href="https://docs.google.com/document/d/1FU_DLzmezpbtM9OJJaJuoeN-tYokrWU26dm7ZWV9oME/edit?tab=t.0">Tempus command list</a></li>
-                <li><a href="https://www.youtube.com/@tempusarchive">Tempus archive</a></li>
-              </ul>
-            </section>
-            <section>
-              <h4>Jumptf</h4>
-              <ul class="link-list">
-                <li><a href="https://jump.tf">Jumptf</a></li>
-                <li><a href="https://jump.tf/forum/">Jumptf forum</a></li>
-                <li><a href="https://www.youtube.com/@TF2RJweekly">TF2RJweekly</a></li>
-              </ul>
-            </section>
-            <section>
-              <h4>SJNetwork</h4>
-              <ul class="link-list">
-                <li><a href="https://sjnetwork.ovh">SJNetwork</a></li>
-              </ul>
-            </section>
-            <section>
-              <h4>Customization</h4>
-              <ul class="link-list">
-                <li><a href="https://github.com/itsmmarc/jumphud">Jump hud</a></li>
-                <li><a href="https://drive.google.com/drive/folders/1HvjqUWgGeWRSiEpdn0natUZELj3rPRAa">Mangler rockets/sound (to stock)</a></li>
-                <li><a href="https://gamebanana.com/mods/542567">Mangler stock like skin</a></li>
-                <li><a href="https://gamebanana.com/mods/12415">Remove rocket trail (stock/original)</a></li>
-                <li><a href="https://drive.google.com/file/d/1fx7olVPWkRwH50wDLuMNWc6jkmF2LfdE/view?usp=sharing">Remove bubles</a></li>
-                <li><a href="https://github.com/bakapear/hudmods/tree/main">Hudmods (speedo etc)</a></li>
-                <li><a href="https://github.com/Elandi-rj/sprays">Sprays</a></li>
-                <li><a href="https://www.youtube.com/watch?v=6GmzKExCy_0">Texture replacing</a></li>
-                <li><a href="https://steamcommunity.com/sharedfiles/filedetails/?id=1514650207">Custom background</a></li>
-              </ul>
-            </section>
-            <section>
-              <h4>Tools</h4>
-              <ul class="link-list">
-                <li><a href="https://jump.tf/forum/index.php?topic=3294.0">Offline jumppack</a></li>
-                <li><a href="https://elandi-rj.github.io/vmf2box/">Box maker</a></li>
-                <li><a href="https://imgur.com/a/how-to-increase-size-of-cl-showpos-e2oxsdI">How to increase the size of cl_showpos</a></li>
-                <li><a href="https://jump.tf/forum/index.php?topic=3367.0">Zipline</a></li>
-                <li><a href="https://bakapear.github.io/bcheck/">Bounce checker</a></li>
-              </ul>
-            </section>
-            <section>
-              <h4>Information</h4>
-              <ul class="link-list">
-                <li><a href="https://docs.google.com/spreadsheets/u/0/d/1907vPaXC_hS7HJaVnO2ugTOcV4ztIUzsOAQGs_5hwPY/htmlview">haydos - Tempus Map Recommendations</a></li>
-                <li><a href="https://www.youtube.com/watch?v=NsWmYZu1GHA">TF2 Jump - How to angled bhop</a></li>
-                <li><a href="https://jumpacademy.tf">Jump academy</a></li>
-                <li><a href="https://www.dropbox.com/scl/fi/c0vxjztou9xj0of1zamer/Review.pdf?rlkey=rv9l35ze3uvhbk5llnwl1ld0k&amp;e=2&amp;dl=0">Ildprut source engine thesis</a></li>
-              </ul>
-            </section>
-          </div>
-          <aside>
-            <h3>Discord servers</h3>
-            <ul class="link-list">
-              <li><a href="https://discord.gg/x9J4hVd96q">Tempus Network</a></li>
-              <li><a href="https://discord.gg/fNuYx7gHqT">Jump Fortress</a></li>
-              <li><a href="https://discord.gg/yQAJWDqkgA">TF2RJweekly</a></li>
-              <li><a href="https://discord.gg/YdNcxnuUwK">Jump Jam</a></li>
-            </ul>
-          </aside>
-        </div>
-      </section>
-
-      <section class="band" id="links">
-        <div class="wrap tokens">
-          <div class="section-head">
-            <h2>Official links</h2>
-            <p>Valve’s own pages for the game, the blog, and the community wiki.</p>
-          </div>
-          <ul class="link-list">
-            <li><a href="https://www.teamfortress.com/">teamfortress.com</a><span>Official site and blog</span></li>
-            <li><a href="https://wiki.teamfortress.com/">Team Fortress Wiki</a><span>Items, maps, and patch history</span></li>
-            <li><a href="https://store.steampowered.com/app/440/Team_Fortress_2/">Steam store page</a><span>Download the free game</span></li>
-          </ul>
-        </div>
-      </section>
+    <main id="main" class="wrap preview-section">
+      <p class="kicker">Team Fortress 2 jumping</p>
+      <h1>TF2 Hub</h1>
+      <p class="lede">Pick a page. Maps, records, ranks, and servers each open on their own, instead of scrolling one long page.</p>
+      <div class="hub-grid">
+        <a class="hub-card" href="maps.html">
+          <h2>Maps</h2>
+          <p>Find a map to play next. Switch between a grid, a list, and a table, and ask for suggestions from a Tempus profile.</p>
+        </a>
+        <a class="hub-card" href="records.html">
+          <h2>Records</h2>
+          <p>Recent map, course, bonus, and trick records, plus top times, from the Tempus activity feed.</p>
+        </a>
+        <a class="hub-card" href="ranks.html">
+          <h2>Ranks</h2>
+          <p>The top 50 Tempus players overall, and for Soldier and Demoman.</p>
+        </a>
+        <a class="hub-card" href="servers.html">
+          <h2>Jump servers</h2>
+          <p>Tempus and Jump Academy listed apart. Rank limits stay on Tempus. Password servers sit at the bottom.</p>
+        </a>
+        <a class="hub-card" href="encyclopedia.html">
+          <h2>Encyclopedia</h2>
+          <p>Jump websites and Discord servers collected by ShadowOfLight.</p>
+        </a>
+        <a class="hub-card" href="links.html">
+          <h2>Links</h2>
+          <p>Valve’s pages for the game, and the Tempus server files linked from this hub.</p>
+        </a>
+      </div>
     </main>
-
     <footer class="site-footer">
       <div class="wrap footer-inner">
         <div>
@@ -364,10 +82,10 @@
           <p class="muted">Unofficial fan page. Team Fortress 2 is a trademark of Valve Corporation. This site is not affiliated with or endorsed by Valve.</p>
         </div>
         <div>
-          <p class="footer-label">On this page</p>
-          <a href="#jump">Jump</a>
-          <a href="#community">Servers</a>
-          <a href="#encyclopedia">Encyclopedia</a>
+          <p class="footer-label">Pages</p>
+          <a href="maps.html">Maps</a>
+          <a href="servers.html">Servers</a>
+          <a href="encyclopedia.html">Encyclopedia</a>
         </div>
         <div>
           <p class="footer-label">Repository</p>
@@ -375,6 +93,6 @@
         </div>
       </div>
     </footer>
-    <script src="js/hub.js"></script>
+    <script src="js/common.js"></script>
   </body>
 </html>
