@@ -46,8 +46,16 @@
     });
   };
 
-  TF2.loadTempus = function (needs) {
+  TF2.loadTempus = function (needs, onUpdate) {
     needs = needs || {};
+    function notify() {
+      if (typeof onUpdate !== "function") return;
+      try {
+        onUpdate();
+      } catch (error) {
+        /* A page render must not stop the rest of the catalog load. */
+      }
+    }
     return TF2.loadJson("data/tempus-fallback.json").then(function (data) {
       if (!data) return;
       TF2.catalogRetrieved = data.retrieved || "";
@@ -71,6 +79,7 @@
     }).catch(function () {
       TF2.loadError = "The saved Tempus snapshot could not be read.";
     }).then(function () {
+      notify();
       if (!needs.servers) return null;
       return TF2.loadJson("data/server-passwords.json").then(function (data) {
         if (!data || !Array.isArray(data.servers)) return;
@@ -94,7 +103,7 @@
       });
     }).then(function () {
       return refreshLive(needs);
-    });
+    }).then(notify);
   };
 
   function replaceTempus(list) {
