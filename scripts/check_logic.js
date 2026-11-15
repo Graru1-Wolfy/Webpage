@@ -68,6 +68,49 @@ assert("automatic points cap is two tiers up", TF2.tierCap(3, "points", null) ==
 assert("automatic practice cap stays put", TF2.tierCap(3, "practice", null) === 3);
 assert("chosen tier overrides the cap", TF2.tierCap(3, "points", 4) === 4);
 assert("next rank gap", TF2.formatPoints(TF2.pointsGap({ soldier: { rank: 1174, points: 2447.73, next_points: 2450.66 } }, "soldier")) === "2.93");
+var plebeian = TF2.nextRankGroup("Plebeian");
+assert("plebeian next group is jester", plebeian.title === "Jester" && plebeian.maxRank === 1000 && plebeian.belowRank === 1001);
+assert("baron next group is count", TF2.nextRankGroup("Baron").title === "Count" && TF2.nextRankGroup("Baron").maxRank === 25);
+assert("knight next group is baron", TF2.nextRankGroup("Knight").title === "Baron" && TF2.nextRankGroup("Knight").maxRank === 50);
+assert("emperor has no next group", TF2.nextRankGroup("Emperor") === null && TF2.isHighestRankGroup("Emperor") === true);
+assert("an unknown title is not a group", TF2.nextRankGroup("NotATitle") === null && TF2.isHighestRankGroup("NotATitle") === false);
+assert("peon next group is peasant", TF2.nextRankGroup("Peon").title === "Peasant" && TF2.nextRankGroup("Peon").maxRank === 5000);
+assert("a roman numeral stays in its group", TF2.nextRankGroup("Plebeian IV").title === "Jester");
+assert("emperor has no number", TF2.rankTitle(1).label === "Emperor" && TF2.rankTitle(5).label === "Duke");
+assert("prince numbers one rank each", TF2.rankTitle(6).label === "Prince I" && TF2.rankTitle(10).label === "Prince V" && TF2.rankTitle(11).label === "Earl I");
+assert("baron is five ranks per number", TF2.rankTitle(26).label === "Baron I" && TF2.rankTitle(30).label === "Baron I" && TF2.rankTitle(31).label === "Baron II" && TF2.rankTitle(50).label === "Baron V");
+assert("wider groups stay in five numbers", TF2.rankTitle(51).label === "Knight I" && TF2.rankTitle(100).label === "Knight V" && TF2.rankTitle(101).label === "Noble I" && TF2.rankTitle(200).label === "Noble V" && TF2.rankTitle(201).label === "Esquire I" && TF2.rankTitle(500).label === "Esquire V" && TF2.rankTitle(501).label === "Jester I");
+assert("the jester plebeian boundary is numbered", TF2.rankTitle(901).label === "Jester V" && TF2.rankTitle(1000).label === "Jester V" && TF2.rankTitle(1001).label === "Plebeian I" && TF2.rankTitle(1300).label === "Plebeian I");
+assert("rank 1174 is plebeian i", TF2.rankTitle(1174).label === "Plebeian I");
+assert("plebeian iv is the fourth fifth", TF2.rankTitle(1901).label === "Plebeian IV" && TF2.rankTitle(2200).label === "Plebeian IV" && TF2.rankTitle(2201).label === "Plebeian V" && TF2.rankTitle(2500).label === "Plebeian V");
+assert("peasant and peon close the ladder", TF2.rankTitle(2501).label === "Peasant I" && TF2.rankTitle(5000).label === "Peasant V" && TF2.rankTitle(5001).label === "Peon" && TF2.rankTitle(80802).label === "Peon");
+var coveredRanks = 0;
+for (var rank = 1; rank <= 5001; rank++) {
+  var placed = TF2.rankTitle(rank);
+  if (!placed || placed.levelMin > rank || (placed.levelMax != null && placed.levelMax < rank)) coveredRanks = -1;
+}
+assert("every rank through peon has one title", coveredRanks === 0);
+var plebeianStep = TF2.nextRankStep(1174);
+assert("plebeian i next number is jester v", plebeianStep.label === "Jester V" && plebeianStep.maxRank === 1000 && plebeianStep.belowRank === 1001);
+var fourthStep = TF2.nextRankStep(2000);
+assert("plebeian iv next number is plebeian iii", TF2.rankTitle(2000).label === "Plebeian IV" && fourthStep.label === "Plebeian III" && fourthStep.maxRank === 1900 && fourthStep.belowRank === 1901);
+assert("peon next number is peasant v", TF2.nextRankStep(5001).label === "Peasant V" && TF2.nextRankStep(5001).maxRank === 5000);
+assert("emperor has no next number", TF2.nextRankStep(1) === null);
+assert("a gendered title uses the same group", TF2.nextRankGroup("Baroness").title === "Count");
+assert("cutoff is the worst rank inside the next group", TF2.rankGroupCutoff([
+  { rank: 999, points: 3200, name: "hidden" },
+  { rank: 1000, points: 3149.2, name: "hidden" },
+  { rank: 1001, points: 3148.67, name: "hidden" }
+], 1000) === 3149.2);
+var boundary = TF2.rankBoundary([
+  { rank: 1000, points: 3149.2, name: "hidden", steamid: "STEAM_0:1:1" },
+  { rank: 1001, points: 3148.67, name: "hidden", steamid: "STEAM_0:0:2" }
+], 1000);
+assert("title change is the two neighboring positions", boundary.rank === 1000 && boundary.points === 3149.2 && boundary.belowRank === 1001 && boundary.belowPoints === 3148.67 && boundary.name == null && boundary.steamid == null);
+assert("a skipped rank uses the last rank still inside the group", TF2.rankGroupCutoff([
+  { rank: 998, points: 10 },
+  { rank: 1001, points: 9 }
+], 1000) === 10);
 var catalog = [
   { name: "jump_done", s: 3, sr: 4 },
   { name: "jump_a", s: 8, sr: 1 },
@@ -124,6 +167,18 @@ var grouped = TF2.selectSuggestions([{ name: "jump_new", s: 3, sr: 1 }], {
   gap: 2.93
 });
 assert("usual group changes the calculator", grouped.items[0].group === "G1" && grouped.items[0].points === 55);
+var towardGroup = TF2.selectSuggestions(catalog, {
+  jumpClass: "soldier",
+  goal: "points",
+  records: tierRecords,
+  plazaMaps: plazaMaps,
+  maxTier: null,
+  tags: [],
+  gap: 700
+});
+assert("a rank group gap stays one tier above comfortable", towardGroup.items.length && towardGroup.items.every(function (item) {
+  return item.tier <= 4;
+}) && towardGroup.items[0].map.name === "jump_c" && towardGroup.items[0].points === 10);
 
 var academy = TF2.describeServer({
   name: "jumpacademy.tf | S4-D4 | US East",
