@@ -1,0 +1,6 @@
+name = "tf2-hub-plaza-relay"
+main = "worker.mjs"
+compatibility_date = "2026-11-15"
+workers_dev = true
+
+# Player lookups are not stored. Do not add a KV, D1, or cache binding here.

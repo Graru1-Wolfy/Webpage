@@ -356,6 +356,19 @@
     return tier >= band.min && tier <= band.max;
   }
 
+  function finishedMapNames(records, jumpClass) {
+    var names = Object.create(null);
+    if (!Array.isArray(records)) return names;
+    var expected = jumpClass === "demoman" ? "demoman" : "soldier";
+    for (var i = 0; i < records.length; i++) {
+      var row = records[i];
+      if (!row || row.class !== expected) continue;
+      if (typeof row.map !== "string" || !/^[A-Za-z0-9_]+$/.test(row.map)) continue;
+      names[row.map] = true;
+    }
+    return names;
+  }
+
   function compareSuggested(a, b, jumpClass, goal) {
     var aTier = classTier(a, jumpClass);
     var bTier = classTier(b, jumpClass);
@@ -456,6 +469,7 @@
     matchesMap: matchesMap,
     suggestBand: suggestBand,
     mapInBand: mapInBand,
+    finishedMapNames: finishedMapNames,
     compareSuggested: compareSuggested,
     classLabel: classLabel,
     layoutLabel: layoutLabel,

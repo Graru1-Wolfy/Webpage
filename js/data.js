@@ -9,6 +9,31 @@
   TF2.academyRetrieved = "";
   TF2.passwordRetrieved = "";
   TF2.loadError = "";
+  TF2.plazaRelay = "https://tf2-hub-plaza-relay.confusion-quartz.workers.dev";
+
+  TF2.loadPlazaRecords = function (playerId) {
+    var id = String(playerId == null ? "" : playerId);
+    if (!/^[1-9][0-9]{0,9}$/.test(id) || !TF2.plazaRelay) return Promise.reject(new Error("relay"));
+    var controller = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, 20000) : null;
+    return fetch(TF2.plazaRelay.replace(/\/$/, "") + "/player-records", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=UTF-8", Accept: "application/json" },
+      body: JSON.stringify({ id: Number(id) }),
+      cache: "no-store",
+      signal: controller ? controller.signal : undefined
+    }).then(function (response) {
+      if (timer) clearTimeout(timer);
+      if (!response.ok) throw new Error("relay");
+      return response.json();
+    }, function (error) {
+      if (timer) clearTimeout(timer);
+      throw error;
+    }).then(function (data) {
+      if (!data || !Array.isArray(data.records)) throw new Error("relay");
+      return data.records;
+    });
+  };
 
   TF2.loadTempus = function (needs) {
     needs = needs || {};
