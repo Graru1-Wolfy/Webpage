@@ -7,15 +7,16 @@
     <meta name="description" content="A fan hub for Team Fortress 2 community servers.">
     <meta id="theme-color" name="theme-color" content="#14121c">
     <script>
+      var theme = "dark";
       try {
         var savedTheme = localStorage.getItem("tf2-theme");
-        if (savedTheme === "light" || savedTheme === "dark") {
-          document.documentElement.dataset.theme = savedTheme;
-          document.getElementById("theme-color").setAttribute("content", savedTheme === "dark" ? "#14121c" : "#F4F2FA");
-        }
+        if (savedTheme === "light" || savedTheme === "dark") theme = savedTheme;
+        else if (window.matchMedia("(prefers-color-scheme: light)").matches) theme = "light";
       } catch (error) {
         /* Keep the default dark theme when storage is unavailable. */
       }
+      document.documentElement.dataset.theme = theme;
+      document.getElementById("theme-color").setAttribute("content", theme === "dark" ? "#14121c" : "#F4F2FA");
     </script>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,10 +28,12 @@
     <a class="skip" href="#main">Skip to content</a>
     <header class="site-header">
       <div class="wrap header-inner">
-        <a class="logo" href="#maps">
-          <span class="logo-mark" aria-hidden="true"></span>
-          TF2 Hub
-        </a>
+        <h1 class="logo">
+          <a href="#maps">
+            <span class="logo-mark" aria-hidden="true"></span>
+            TF2 Hub
+          </a>
+        </h1>
         <nav class="site-nav" aria-label="Page">
           <a href="#maps">Maps</a>
           <a href="#jump">Jump</a>
@@ -38,7 +41,7 @@
           <a href="#encyclopedia">Encyclopedia</a>
           <a href="#links">Links</a>
         </nav>
-        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="true">Light mode</button>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="true">Dark theme</button>
       </div>
     </header>
 
@@ -56,6 +59,7 @@
         <div class="section-head">
           <h2>Jump</h2>
           <p>Maps, recent records, and ranks from the <a href="https://tempus2.xyz/apidocs/">Tempus API</a>. Tier 1 is the easiest. Ratings are Good, Decent, Poor, and Bad. A download is the map file on the <a href="https://static.tempus2.xyz/tempus/server/maps/">static mirror</a> when that file is hosted there.</p>
+          <p>This catalog, the records, and the ranks are a snapshot from <time id="jump-updated">date unavailable</time>, not a live feed.</p>
         </div>
         <div class="modes" id="jump-class" role="toolbar" aria-label="Class">
           <button type="button" data-class="soldier" aria-pressed="true">Soldier</button>
@@ -158,7 +162,7 @@
         </div>
         <div class="section-head jump-files-head">
           <h3>Server files</h3>
-          <p>Current builds from <a href="https://static.tempus2.xyz/public/">static.tempus2.xyz/public</a>.</p>
+          <p>Builds linked from <a href="https://static.tempus2.xyz/public/">static.tempus2.xyz/public</a>. Each date is the file date recorded here, not a check that the file is the newest build.</p>
         </div>
         <div class="jump-files">
           <section>
@@ -189,10 +193,18 @@
         <div class="wrap">
           <div class="section-head">
             <h2>Community servers</h2>
-            <p>The totals and regions are from <a href="https://www.steamserverbrowser.com/games/team-fortress-2">SteamServerBrowser</a>. Tempus servers are the public list from the <a href="https://tempus2.xyz/api/v0/servers/statusList">Tempus API</a>. Jump Academy is listed with them. Each address opens that server’s SteamServerBrowser page.</p>
+            <p>Two different snapshots sit in this section. The cards are every listed TF2 community server. The table is only Tempus and Jump Academy.</p>
+          </div>
+          <div class="section-head jump-files-head">
+            <h3>All TF2 community servers</h3>
+            <p>Totals and regions are from <a href="https://www.steamserverbrowser.com/games/team-fortress-2">SteamServerBrowser</a>, which lists community servers only. Snapshot <time id="community-updated">date unavailable</time>. These numbers are not the jump list below.</p>
           </div>
           <div class="metrics" id="community-stats"></div>
           <div class="card-grid region-grid" id="region-grid"></div>
+          <div class="section-head jump-files-head">
+            <h3>Jump servers</h3>
+            <p>Tempus servers are the public list from the <a href="https://tempus2.xyz/api/v0/servers/statusList">Tempus API</a>. Jump Academy is listed with them. Player counts and online status are from the snapshot <time id="servers-updated">date unavailable</time>, not a live check. Latency is a regional estimate, not a measured ping. Tier is inferred from the server name. Rank is copied when the name says “Rank N”; an S-code rank is an estimate, and a missing rank is not stated. Jump Academy’s region is read from the server name. Tempus region groups the server’s country. Each address opens that server’s SteamServerBrowser page.</p>
+          </div>
           <form class="filter-bar" id="server-filters">
             <label>Region
               <select name="region" aria-label="Region">
@@ -205,16 +217,16 @@
                 <option>Africa</option>
               </select>
             </label>
-            <label>Latency
-              <select name="latency" aria-label="Latency">
+            <label>Est. latency
+              <select name="latency" aria-label="Estimated latency">
                 <option value="all">Any</option>
                 <option value="80">Under 80 ms</option>
                 <option value="150">Under 150 ms</option>
                 <option value="250">Under 250 ms</option>
               </select>
             </label>
-            <label>Map tier
-              <select name="tier" aria-label="Map tier">
+            <label>Est. tier
+              <select name="tier" aria-label="Estimated tier">
                 <option value="all">Any</option>
                 <option>Beginner</option>
                 <option>Intermediate</option>
@@ -232,7 +244,7 @@
             <label>Rank
               <select name="rank" aria-label="Rank">
                 <option value="all">Any</option>
-                <option value="open">Open</option>
+                <option value="open">Not stated</option>
                 <option value="1000">Top 1000</option>
                 <option value="500">Top 500</option>
                 <option value="200">Top 200</option>
@@ -256,11 +268,11 @@
                 <tr>
                   <th>Server</th>
                   <th>Region</th>
-                  <th>Tier</th>
+                  <th>Est. tier</th>
                   <th>Rank</th>
                   <th>Map</th>
                   <th>Players</th>
-                  <th>Latency</th>
+                  <th>Est. latency</th>
                   <th>Address</th>
                 </tr>
               </thead>

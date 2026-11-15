@@ -161,6 +161,20 @@ input {
   text-decoration: none;
 }
 
+h1.logo {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+h1.logo a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
 .logo-mark {
   width: 18px;
   height: 18px;
@@ -223,6 +237,11 @@ input {
 .btn {
   border-radius: 999px;
   padding: 10px 16px;
+}
+
+.theme-toggle {
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .btn-primary {
@@ -690,8 +709,8 @@ code {
   .site-nav a {
     flex: 0 0 auto;
     scroll-snap-align: start;
-    min-height: 40px;
-    padding: 6px 12px;
+    min-height: 44px;
+    padding: 8px 12px;
     border: 1px solid var(--border);
     border-radius: 999px;
     background: var(--surface-raised);
@@ -1087,10 +1106,10 @@ code {
   }
 
   .theme-toggle {
-    min-height: 40px;
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
-    padding: 6px 12px;
+    padding: 8px 12px;
   }
 
   .filter-bar,
