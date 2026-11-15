@@ -38,6 +38,11 @@ var finished = TF2.finishedMapNames([
 assert("finished names keep the selected class", finished.jump_beef === true && !finished.jump_other && !finished["jump bad"]);
 var courseOnly = TF2.finishedMapNames([{ map: "jump_beef", class: "soldier", type: "course" }], "soldier");
 assert("course finish is not a map finish", !courseOnly.jump_beef);
+var digitMap = { name: "jump_b1", s: 1, d: 1 };
+var letterMap = { name: "jump_bl", s: 1, d: 1 };
+assert("a typed 1 matches the digit 1", TF2.matchesMap(digitMap, { query: "b1", type: "all", rating: "all", layout: "all" }, "all", "soldier"));
+assert("a typed 1 does not match the letter l", !TF2.matchesMap(letterMap, { query: "b1", type: "all", rating: "all", layout: "all" }, "all", "soldier"));
+assert("a typed l does not match the digit 1", !TF2.matchesMap(digitMap, { query: "bl", type: "all", rating: "all", layout: "all" }, "all", "soldier"));
 assert("plaza completion points", TF2.plazaPoints("map", 1, 1, 15) === 1 && TF2.plazaPoints("map", 3, 4, 15) === 5 && TF2.plazaPoints("map", 4, 1, 15) === 10);
 assert("plaza world record points", TF2.plazaPoints("map", 1, 1, 1) === 1001);
 assert("plaza group four points", TF2.plazaPoints("map", 1, 1, 14) === 3);

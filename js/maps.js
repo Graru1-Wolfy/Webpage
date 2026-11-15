@@ -137,7 +137,11 @@
     recordsState = "idle";
     lookupToken += 1;
     searchResults = [];
-    renderMaps();
+    try {
+      renderMaps();
+    } catch (error) {
+      /* The search still runs when the list cannot be drawn yet. */
+    }
     if (query.length < 2) {
       recommendStatus.textContent = "Enter at least two characters of a Tempus player name.";
       return;
@@ -174,9 +178,9 @@
   });
 
   renderMaps();
-  TF2.loadTempus({ maps: true }).then(function () {
-    setStatus();
-    renderMaps();
+  TF2.loadTempus({ maps: true }, showLoadedCatalog).catch(function () {
+    if (!TF2.loadError) TF2.loadError = "The map catalog could not be read.";
+    showLoadedCatalog();
   });
 
   function choosePlayer(player) {
@@ -217,10 +221,15 @@
     });
   }
 
+  function showLoadedCatalog() {
+    setStatus();
+    renderMaps();
+  }
+
   function setStatus() {
     var node = document.getElementById("jump-status");
     if (!TF2.catalog.maps) {
-      node.textContent = TF2.catalogRetrieved ? "The map catalog could not be read." : "Loading the Tempus catalog.";
+      node.textContent = TF2.loadError || "Loading the Tempus catalog.";
       return;
     }
     node.textContent = TF2.catalogLive.maps
@@ -288,8 +297,12 @@
 
     if (!maps) {
       count.textContent = "";
-      results.innerHTML = "";
-      rows.innerHTML = '<tr><td class="empty-row" colspan="4">Loading the Tempus catalog…</td></tr>';
+      var message = TF2.loadError || "Loading the Tempus catalog.";
+      results.hidden = false;
+      tableWrap.hidden = true;
+      results.className = "";
+      results.innerHTML = '<p class="empty-row">' + TF2.escapeHtml(message) + "</p>";
+      rows.innerHTML = '<tr><td class="empty-row" colspan="4">' + TF2.escapeHtml(message) + "</td></tr>";
       more.hidden = true;
       return;
     }
@@ -481,6 +494,8 @@
   }
 
   function syncPlayerChrome() {
+    if (!playerTools || !goalBar || !titleLabel || !listBar || !titleTarget) return;
+    if (typeof TF2.rankChoices !== "function") return;
     playerTools.hidden = !selectedPlayer;
     goalBar.hidden = !selectedPlayer || listMode !== "suggested";
     titleLabel.hidden = !(selectedPlayer && goal === "points" && listMode === "suggested");
