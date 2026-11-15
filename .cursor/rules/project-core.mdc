@@ -1,0 +1,39 @@
+---
+description: "Core identity, product scope, non-negotiable principles, and approval boundaries for the TF2 Hub."
+alwaysApply: true
+---
+
+# TF2 Hub — Core Project Rules
+
+## Product identity
+- This repository is a community resource hub centered on Team Fortress 2 (TF2) jumping.
+- Keep jumping as the primary product purpose. Jump-adjacent content is in scope only when it directly supports jump players, mappers, server operators, or the jumping community.
+- Support all relevant TF2 jumping classes. Do not assume the product is limited to Soldier and Demoman.
+- The audience includes beginners and experienced jumpers. Make essential information approachable without removing advanced detail.
+
+## Product scope
+- The former general-purpose Maps section is to be repurposed as a dedicated jump-map directory.
+- Do not add ordinary TF2 game-mode discovery or unrelated general TF2 portal features (for example casual matchmaking, payload, CTF, control points, or generic server/map discovery) unless the user explicitly changes the scope.
+- Jump maps, jumping disciplines, jump servers and communities, records, rankings, statistics, tutorials, educational resources, and jump-related tools are in scope.
+- Identify potentially valuable jump-related features and propose them with rationale. Do not silently expand product scope or implement major new product capabilities without approval.
+
+## Existing functionality and data integrity
+- Preserve existing user-facing functionality unless an intentional replacement is approved.
+- Treat the existing jump-map catalog, map filters/classifications, records, activity, player rankings, community-server discovery/filtering, navigation, and theme preference as regression-sensitive functionality.
+- Do not fabricate, extrapolate, or silently substitute records, rankings, player counts, server status, map metadata, difficulty, latency, or update timestamps.
+- Clearly distinguish source-provided facts from inferred or estimated values. Label estimates and heuristics in the UI.
+- When source data is unavailable or invalid, communicate the limitation and use a known-good fallback where possible.
+
+## Decision-making and autonomy
+- Work autonomously on routine, reversible implementation details that fit the approved product and architecture.
+- Before proceeding, ask for approval for major architecture changes, new runtime/build dependencies, destructive changes, data migrations, significant behavior changes, or changes to product scope.
+- For complex or multi-file work, inspect the current implementation and present a concise plan before implementation.
+- Do not overwrite, delete, or restructure existing data merely to simplify implementation.
+- Do not claim that a change, test, API integration, or deployment succeeded unless it was actually performed and verified.
+
+## Working approach
+1. Inspect the relevant files and current behavior before editing.
+2. Trace data flow and dependencies before changing interfaces or data structures.
+3. Prefer incremental, testable changes over broad rewrites.
+4. Keep documentation accurate and update it when behavior, setup, or data contracts change.
+5. If requirements conflict or evidence is insufficient, explain the uncertainty and ask the smallest necessary question.

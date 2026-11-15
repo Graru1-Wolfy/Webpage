@@ -1,0 +1,53 @@
+---
+description: "External APIs, community data sources, hourly freshness targets, caching, validation, and fallback strategy."
+alwaysApply: false
+---
+
+# External Data and Integrations
+
+## Source policy
+- Prefer official APIs and original community-maintained sources when they provide the required data.
+- Trusted community sources are allowed when their provenance, maintenance status, and usage conditions can be established.
+- Attribute external datasets and document their source, retrieval time, license/terms where applicable, and any transformations.
+- Do not scrape or reuse data in ways that violate source terms, access controls, or reasonable rate limits.
+- Never invent API endpoints, response schemas, authentication methods, CORS behavior, or service capabilities. Verify them from authoritative documentation or controlled tests.
+
+## Hourly freshness target
+- Treat hourly refresh as the desired freshness target, not a guarantee of successful hourly updates.
+- Apply refresh cadence by dataset and source constraints. Server/player status may warrant frequent checks; relatively static map metadata may only need a change check.
+- Schedule GitHub Actions away from the top of the hour (for example, at minute 17) to reduce contention with common scheduled-job peaks.
+- Account for scheduled-workflow delays, skipped runs, API outages, rate limits, and source maintenance.
+- Do not report a dataset as current merely because a scheduled workflow ran; record the last successful source retrieval and validation time.
+
+## Hybrid acquisition and fallback
+- Evaluate direct browser API access where CORS, authentication, reliability, and rate limits permit.
+- Use scheduled GitHub Actions to retrieve, validate, normalize, and publish static JSON snapshots when direct access is unsuitable or when a stable fallback is needed.
+- The frontend should use available live data where reliable and fall back to the latest validated snapshot or cached last-known-good data.
+- Keep the last-known-good dataset if a refresh fails. Never replace valid data with an empty, partial, or invalid response without an explicit policy.
+- Design the frontend so the static GitHub Pages site remains usable when external services are unavailable.
+- Do not assume GitHub Pages can run server-side code. Keep secrets in GitHub Actions secrets or another approved server-side secret store; never expose them in client-side code or public artifacts.
+
+## Data quality and provenance
+- Validate HTTP status, content type, schema, required fields, identifiers, timestamps, and reasonable value ranges before publishing data.
+- Detect duplicate identifiers and unexpected record-count changes.
+- Preserve source timestamps separately from retrieval and publication timestamps.
+- Record source name, source URL, retrieval time, validation result, and dataset version where practical.
+- Clearly distinguish live, cached, snapshot, stale, estimated, and inferred values in the UI.
+- Do not present estimated regional latency as measured ping. Only label ping as measured when it comes from an actual measurement.
+- Avoid mixing datasets with different definitions or time windows without explaining the difference.
+- Never fabricate records, rankings, player counts, server availability, map ratings, or update times.
+
+## Reliability and operations
+- Use bounded timeouts, sensible retry/backoff, and concurrency limits.
+- Respect API rate limits and caching headers where provided.
+- Make ingestion idempotent so repeated runs do not create duplicate or corrupt data.
+- Keep workflow permissions minimal. Pin third-party GitHub Actions to reviewed versions or immutable references where practical.
+- Ensure a failed source does not prevent unrelated datasets from refreshing when they can be processed independently.
+- Log enough information to diagnose failures without leaking credentials.
+- Document manual recovery and how to inspect the last successful update.
+
+## Investigation required before implementation
+- Verify each candidate API/source, its current endpoints, authentication requirements, CORS policy, rate limits, terms, and data fields.
+- Determine which datasets can genuinely refresh hourly and which require a slower cadence.
+- Test GitHub Actions access and publication permissions before relying on the workflow.
+- Record unresolved limitations rather than silently assuming the hybrid strategy is feasible for every dataset.

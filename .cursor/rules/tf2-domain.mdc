@@ -1,0 +1,44 @@
+---
+description: "TF2 jumping domain knowledge, map taxonomy, classes, records, servers, and community resources."
+alwaysApply: false
+---
+
+# TF2 Jumping Domain Rules
+
+## Domain scope
+- Interpret TF2 Hub features through the needs of the jumping community.
+- Include content adjacent to jumping only when it directly helps players, mappers, server operators, coaches, or community organizers.
+- Do not turn the product into a general TF2 game-mode, matchmaking, map, or server portal.
+
+## Classes and disciplines
+- Support all TF2 classes relevant to jumping. Do not hard-code Soldier and Demoman as the only supported classes.
+- Do not assume every map or discipline supports every class. Preserve class compatibility as explicit data when known.
+- Investigate community terminology and source data before defining discipline names, categories, or filters.
+- The map directory uses a custom taxonomy. Do not force all maps into a simplistic linear/course/trick/bonus-only model if the source data or community conventions require more nuance.
+- Keep distinct concepts distinct: map type, route/layout type, class compatibility, difficulty/tier, rating, and completion/record category are not interchangeable.
+
+## Maps and metadata
+- Treat the former general Maps section as a jump-map directory.
+- Preserve source identifiers, map names, aliases, authors, download links, class compatibility, difficulty, layout/discipline, ratings, and record associations where available.
+- Do not infer a map's difficulty or class compatibility from its name unless explicitly marked as a heuristic and confirmed as acceptable.
+- Document unknown, community-defined, or disputed classifications rather than presenting them as authoritative facts.
+- Use filters and navigation that help beginners discover appropriate maps while retaining useful advanced discovery controls.
+
+## Records, rankings, and activity
+- Preserve distinctions among map world records, course records, bonus records, trick records, and other source-defined record types.
+- Preserve player identity and class/category context when the source provides them.
+- Rankings must use the source's actual ordering, scope, and timestamp. Do not merge incompatible leaderboards.
+- Do not calculate or imply a player's rank from incomplete data.
+- Clearly show when a record or ranking is unavailable, stale, or only a partial top list.
+
+## Servers and communities
+- Focus server discovery on jump servers and communities.
+- Preserve server identity, address/connection details, region, player counts, map, status, and source attribution when available.
+- Distinguish source-provided server metadata from locally inferred region, tier, rank, or labels.
+- Never represent a regional latency estimate as a measured server ping.
+- Avoid treating a server as online or available without sufficiently fresh status data.
+
+## Learning resources and tools
+- Include tutorials, movement techniques, mapping resources, configuration guidance, tools, and community links when they directly support TF2 jumping.
+- Explain technical terms for beginners where useful without diluting advanced information.
+- Verify that external links are relevant, safe, and maintained before promoting them.
