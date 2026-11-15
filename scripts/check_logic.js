@@ -29,6 +29,13 @@ var beginner = TF2.suggestBand(30000, 2, "practice");
 assert("few completions stay low", beginner.max <= 2);
 var points = TF2.suggestBand(800, 100, "points");
 assert("mid points starts above the practice tier", points.min === 5 && points.max === 99);
+var finished = TF2.finishedMapNames([
+  { map: "jump_beef", class: "soldier" },
+  { map: "jump_beef", class: "demoman" },
+  { map: "jump bad", class: "soldier" },
+  { map: "jump_other", class: "scout" }
+], "soldier");
+assert("finished names keep the selected class", finished.jump_beef === true && !finished.jump_other && !finished["jump bad"]);
 
 var academy = TF2.describeServer({
   name: "jumpacademy.tf | S4-D4 | US East",

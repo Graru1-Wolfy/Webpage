@@ -7,6 +7,9 @@
   var goal = "practice";
   var selectedPlayer = null;
   var playerStats = null;
+  var playerRecords = null;
+  var recordsState = "idle";
+  var lookupToken = 0;
   var searchResults = [];
 
   var classBar = document.getElementById("jump-class");
@@ -82,6 +85,9 @@
     query = String(query || "").trim();
     selectedPlayer = null;
     playerStats = null;
+    playerRecords = null;
+    recordsState = "idle";
+    lookupToken += 1;
     searchResults = [];
     renderSuggestions();
     if (query.length < 2) {
@@ -131,15 +137,31 @@
     selectedPlayer = player;
     searchResults = [];
     playerStats = null;
+    playerRecords = null;
+    recordsState = "loading";
+    var token = ++lookupToken;
     renderPicks();
-    recommendStatus.textContent = "Loading the Tempus profile for " + player.name + ".";
+    recommendStatus.textContent = "Loading the Tempus profile and finished maps for " + player.name + ".";
+    TF2.loadPlazaRecords(player.id).then(function (records) {
+      if (token !== lookupToken) return;
+      playerRecords = records;
+      recordsState = "ready";
+      renderSuggestions();
+    }).catch(function () {
+      if (token !== lookupToken) return;
+      playerRecords = null;
+      recordsState = "failed";
+      renderSuggestions();
+    });
     TF2.wait(1100).then(function () {
       return TF2.loadJson("https://tempus2.xyz/api/v0/players/id/" + player.id + "/stats", 15000);
     }).then(function (stats) {
+      if (token !== lookupToken) return;
       if (!stats || !stats.class_rank_info || !stats.player_info) throw new Error("stats");
       playerStats = stats;
       renderSuggestions();
     }).catch(function () {
+      if (token !== lookupToken) return;
       recommendStatus.textContent = "The Tempus profile did not load.";
     });
   }
@@ -279,7 +301,9 @@
     var rank = typeof classRank.rank === "number" ? classRank.rank : null;
     var points = typeof classRank.points === "number" ? classRank.points : null;
     var band = TF2.suggestBand(rank, completions, goal);
+    var finished = recordsState === "ready" ? TF2.finishedMapNames(playerRecords, jumpClass) : null;
     var maps = (TF2.catalog.maps || []).filter(function (map) {
+      if (finished && finished[map.name]) return false;
       return TF2.mapInBand(map, jumpClass, band);
     }).sort(function (a, b) {
       return TF2.compareSuggested(a, b, jumpClass, goal);
@@ -290,7 +314,17 @@
     if (points != null) profile += " with " + Math.round(points).toLocaleString() + " points";
     if (typeof completions === "number") profile += ". Map completions on the profile: " + completions.toLocaleString();
     profile += ". Suggested " + tierText + ".";
-    var caveat = " This tier band is a suggestion from the class rank and completion count. Tempus does not publish which maps this player has finished, so a suggestion may already be completed. Points shown are the profile total, not a calculated reward for a map.";
+    var caveat = " This tier band is a suggestion from the class rank and completion count. Points shown are the profile total, not a calculated reward for a map.";
+    if (recordsState === "ready") {
+      var finishedCount = finished ? Object.keys(finished).length : 0;
+      caveat += " Left out " + finishedCount.toLocaleString() + " finished " +
+        (jumpClass === "demoman" ? "Demoman" : "Soldier") +
+        " maps reported by Tempus Plaza for this visit. This site does not keep a copy.";
+    } else if (recordsState === "loading") {
+      caveat += " Finished maps from Tempus Plaza are still loading.";
+    } else {
+      caveat += " Tempus Plaza did not return the finished maps, so a suggestion may already be completed.";
+    }
     recommendStatus.textContent = profile + caveat;
     if (!maps.length) {
       recommendResults.innerHTML = '<p class="empty-row">No maps in the catalog match this suggestion.</p>';
