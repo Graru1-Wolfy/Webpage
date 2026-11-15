@@ -488,30 +488,33 @@
     return row.next_points - row.points;
   }
 
-  // Titles sit on fixed positions in the points-sorted class list.
-  // Soldier and Demoman use the same positions. Rank 1000 is Jester and
-  // rank 1001 is Plebeian on both. Overall is a third points sort and the
-  // profile has no overall title. Checked live on 2026-11-15. The in-game
-  // roman numeral is a subdivision inside the group; the API title is the group.
-  var rankGroups = [
-    { title: "Emperor", maxRank: 1 },
-    { title: "King", maxRank: 2 },
-    { title: "Archduke", maxRank: 3 },
-    { title: "Lord", maxRank: 4 },
-    { title: "Duke", maxRank: 5 },
-    { title: "Prince", maxRank: 10 },
-    { title: "Earl", maxRank: 15 },
-    { title: "Sir", maxRank: 20 },
-    { title: "Count", maxRank: 25 },
-    { title: "Baron", maxRank: 50 },
-    { title: "Knight", maxRank: 100 },
-    { title: "Noble", maxRank: 200 },
-    { title: "Esquire", maxRank: 500 },
-    { title: "Jester", maxRank: 1000 },
-    { title: "Plebeian", maxRank: 2500 },
-    { title: "Peasant", maxRank: 5000 },
-    { title: "Peon", maxRank: 0 }
+  // Fixed positions on the points-sorted list. Soldier, Demoman, and overall
+  // use the same positions. The API title is the group name. Chat adds a
+  // roman numeral: I is the best fifth of the group and V is the last fifth.
+  // The top five ranks and Peon have no numeral. Checked live on 2026-11-15.
+  var rankTitles = [
+    { title: "Emperor", minRank: 1, maxRank: 1, levels: 0 },
+    { title: "King", minRank: 2, maxRank: 2, levels: 0 },
+    { title: "Archduke", minRank: 3, maxRank: 3, levels: 0 },
+    { title: "Lord", minRank: 4, maxRank: 4, levels: 0 },
+    { title: "Duke", minRank: 5, maxRank: 5, levels: 0 },
+    { title: "Prince", minRank: 6, maxRank: 10, levels: 5 },
+    { title: "Earl", minRank: 11, maxRank: 15, levels: 5 },
+    { title: "Sir", minRank: 16, maxRank: 20, levels: 5 },
+    { title: "Count", minRank: 21, maxRank: 25, levels: 5 },
+    { title: "Baron", minRank: 26, maxRank: 50, levels: 5 },
+    { title: "Knight", minRank: 51, maxRank: 100, levels: 5 },
+    { title: "Noble", minRank: 101, maxRank: 200, levels: 5 },
+    { title: "Esquire", minRank: 201, maxRank: 500, levels: 5 },
+    { title: "Jester", minRank: 501, maxRank: 1000, levels: 5 },
+    { title: "Plebeian", minRank: 1001, maxRank: 2500, levels: 5 },
+    { title: "Peasant", minRank: 2501, maxRank: 5000, levels: 5 },
+    { title: "Peon", minRank: 5001, maxRank: null, levels: 0 }
   ];
+  var rankNumerals = ["", "I", "II", "III", "IV", "V"];
+  var rankGroups = rankTitles.map(function (row) {
+    return { title: row.title, maxRank: row.maxRank == null ? 0 : row.maxRank };
+  });
 
   var rankGroupAliases = {
     Empress: "Emperor",
@@ -533,11 +536,74 @@
     return -1;
   }
 
+  function rankGroupName(title) {
+    var index = rankGroupIndex(title);
+    return index < 0 ? "" : rankGroups[index].title;
+  }
+
   function nextRankGroup(title) {
     var index = rankGroupIndex(title);
     if (index <= 0) return null;
     var next = rankGroups[index - 1];
     return { title: next.title, maxRank: next.maxRank, belowRank: next.maxRank + 1 };
+  }
+
+  function rankTitle(rank) {
+    var value = Math.floor(Number(rank));
+    if (!isFinite(value) || value < 1) return null;
+    for (var i = 0; i < rankTitles.length; i++) {
+      var row = rankTitles[i];
+      var last = row.maxRank == null ? Infinity : row.maxRank;
+      if (value < row.minRank || value > last) continue;
+      if (!row.levels) {
+        return {
+          title: row.title,
+          level: 0,
+          numeral: "",
+          label: row.title,
+          minRank: row.minRank,
+          maxRank: row.maxRank,
+          levelMin: row.minRank,
+          levelMax: row.maxRank
+        };
+      }
+      var size = (row.maxRank - row.minRank + 1) / row.levels;
+      var level = Math.floor((value - row.minRank) / size) + 1;
+      if (level > row.levels) level = row.levels;
+      var levelMin = row.minRank + (level - 1) * size;
+      return {
+        title: row.title,
+        level: level,
+        numeral: rankNumerals[level],
+        label: row.title + " " + rankNumerals[level],
+        minRank: row.minRank,
+        maxRank: row.maxRank,
+        levelMin: levelMin,
+        levelMax: levelMin + size - 1
+      };
+    }
+    return null;
+  }
+
+  function nextRankStep(rank) {
+    var current = rankTitle(rank);
+    if (!current) return null;
+    var targetRank = current.level > 1 ? current.levelMin - 1 : 0;
+    if (!targetRank) {
+      var index = rankGroupIndex(current.title);
+      if (index <= 0) return null;
+      targetRank = rankGroups[index - 1].maxRank;
+    }
+    var next = rankTitle(targetRank);
+    if (!next || next.levelMax == null) return null;
+    return {
+      title: next.title,
+      label: next.label,
+      level: next.level,
+      numeral: next.numeral,
+      maxRank: next.levelMax,
+      belowRank: next.levelMax + 1
+    };
   }
 
   function isHighestRankGroup(title) {
@@ -782,6 +848,9 @@
     usualGroup: usualGroup,
     pointsGap: pointsGap,
     nextRankGroup: nextRankGroup,
+    rankGroupName: rankGroupName,
+    rankTitle: rankTitle,
+    nextRankStep: nextRankStep,
     isHighestRankGroup: isHighestRankGroup,
     rankGroupCutoff: rankGroupCutoff,
     rankBoundary: rankBoundary,

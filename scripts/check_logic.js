@@ -76,6 +76,26 @@ assert("emperor has no next group", TF2.nextRankGroup("Emperor") === null && TF2
 assert("an unknown title is not a group", TF2.nextRankGroup("NotATitle") === null && TF2.isHighestRankGroup("NotATitle") === false);
 assert("peon next group is peasant", TF2.nextRankGroup("Peon").title === "Peasant" && TF2.nextRankGroup("Peon").maxRank === 5000);
 assert("a roman numeral stays in its group", TF2.nextRankGroup("Plebeian IV").title === "Jester");
+assert("emperor has no number", TF2.rankTitle(1).label === "Emperor" && TF2.rankTitle(5).label === "Duke");
+assert("prince numbers one rank each", TF2.rankTitle(6).label === "Prince I" && TF2.rankTitle(10).label === "Prince V" && TF2.rankTitle(11).label === "Earl I");
+assert("baron is five ranks per number", TF2.rankTitle(26).label === "Baron I" && TF2.rankTitle(30).label === "Baron I" && TF2.rankTitle(31).label === "Baron II" && TF2.rankTitle(50).label === "Baron V");
+assert("wider groups stay in five numbers", TF2.rankTitle(51).label === "Knight I" && TF2.rankTitle(100).label === "Knight V" && TF2.rankTitle(101).label === "Noble I" && TF2.rankTitle(200).label === "Noble V" && TF2.rankTitle(201).label === "Esquire I" && TF2.rankTitle(500).label === "Esquire V" && TF2.rankTitle(501).label === "Jester I");
+assert("the jester plebeian boundary is numbered", TF2.rankTitle(901).label === "Jester V" && TF2.rankTitle(1000).label === "Jester V" && TF2.rankTitle(1001).label === "Plebeian I" && TF2.rankTitle(1300).label === "Plebeian I");
+assert("rank 1174 is plebeian i", TF2.rankTitle(1174).label === "Plebeian I");
+assert("plebeian iv is the fourth fifth", TF2.rankTitle(1901).label === "Plebeian IV" && TF2.rankTitle(2200).label === "Plebeian IV" && TF2.rankTitle(2201).label === "Plebeian V" && TF2.rankTitle(2500).label === "Plebeian V");
+assert("peasant and peon close the ladder", TF2.rankTitle(2501).label === "Peasant I" && TF2.rankTitle(5000).label === "Peasant V" && TF2.rankTitle(5001).label === "Peon" && TF2.rankTitle(80802).label === "Peon");
+var coveredRanks = 0;
+for (var rank = 1; rank <= 5001; rank++) {
+  var placed = TF2.rankTitle(rank);
+  if (!placed || placed.levelMin > rank || (placed.levelMax != null && placed.levelMax < rank)) coveredRanks = -1;
+}
+assert("every rank through peon has one title", coveredRanks === 0);
+var plebeianStep = TF2.nextRankStep(1174);
+assert("plebeian i next number is jester v", plebeianStep.label === "Jester V" && plebeianStep.maxRank === 1000 && plebeianStep.belowRank === 1001);
+var fourthStep = TF2.nextRankStep(2000);
+assert("plebeian iv next number is plebeian iii", TF2.rankTitle(2000).label === "Plebeian IV" && fourthStep.label === "Plebeian III" && fourthStep.maxRank === 1900 && fourthStep.belowRank === 1901);
+assert("peon next number is peasant v", TF2.nextRankStep(5001).label === "Peasant V" && TF2.nextRankStep(5001).maxRank === 5000);
+assert("emperor has no next number", TF2.nextRankStep(1) === null);
 assert("a gendered title uses the same group", TF2.nextRankGroup("Baroness").title === "Count");
 assert("cutoff is the worst rank inside the next group", TF2.rankGroupCutoff([
   { rank: 999, points: 3200, name: "hidden" },

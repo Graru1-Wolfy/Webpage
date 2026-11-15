@@ -296,27 +296,44 @@
     return typeof info.title === "string" ? info.title : "";
   }
 
+  function classRankNumber() {
+    if (!playerStats || !playerStats.class_rank_info) return null;
+    var classId = jumpClass === "demoman" ? "4" : "3";
+    var info = playerStats.class_rank_info[classId] || {};
+    return typeof info.rank === "number" ? info.rank : null;
+  }
+
+  function shownTitle(rank) {
+    var placed = typeof rank === "number" ? TF2.rankTitle(rank) : null;
+    var api = currentRankTitle();
+    if (placed && (!api || TF2.rankGroupName(api) === placed.title)) return placed.label;
+    return api;
+  }
+
   function loadGroupTarget() {
     var title = currentRankTitle();
-    var next = TF2.nextRankGroup(title);
+    var rank = classRankNumber();
+    var next = rank ? TF2.nextRankStep(rank) : TF2.nextRankGroup(title);
     var token = ++groupToken;
-    if (!title) {
+    if (!title && !rank) {
       groupTarget = null;
       renderSuggestions();
       return;
     }
     if (!next) {
-      groupTarget = { title: "", points: null, state: TF2.isHighestRankGroup(title) ? "top" : "unknown" };
+      var known = TF2.isHighestRankGroup(title) || (rank && TF2.rankTitle(rank) && TF2.rankTitle(rank).title === "Emperor");
+      groupTarget = { title: "", points: null, state: known ? "top" : "unknown" };
       renderSuggestions();
       return;
     }
-    groupTarget = { title: next.title, points: null, state: "loading" };
+    groupTarget = { title: next.label || next.title, points: null, state: "loading" };
     renderSuggestions();
     var classId = jumpClass === "demoman" ? 4 : 3;
     loadCutoff(classId, next.maxRank).then(function (boundary) {
       if (token !== groupToken) return;
+      var upper = boundary.rank ? TF2.rankTitle(boundary.rank) : null;
       groupTarget = {
-        title: next.title,
+        title: upper ? upper.label : (next.label || next.title),
         rank: boundary.rank,
         points: boundary.points,
         belowRank: boundary.belowRank,
@@ -521,18 +538,20 @@
 
   function richStatus(result, info, gap) {
     var label = classTitle();
-    var title = currentRankTitle();
+    var title = shownTitle(info.rank);
     var sentence = title ? selectedPlayer.name + " is " + title + ", " + label : selectedPlayer.name + " is " + label;
     if (info.rank) sentence += " rank " + info.rank.toLocaleString();
     if (info.points != null) sentence += " with " + TF2.formatPoints(info.points) + " points on " + info.source;
     sentence += ".";
     if (groupTarget && groupTarget.state === "ready" && info.points != null) {
       var remain = groupTarget.points - info.points;
-      if (groupTarget.rank && groupTarget.belowRank && title) {
+      var lowerPlaced = groupTarget.belowRank ? TF2.rankTitle(groupTarget.belowRank) : null;
+      var lowerTitle = lowerPlaced ? lowerPlaced.label : title;
+      if (groupTarget.rank && groupTarget.belowRank && lowerTitle) {
         sentence += " The title changes between " + label + " rank " + groupTarget.rank.toLocaleString() + " and rank " + groupTarget.belowRank.toLocaleString() + ".";
         sentence += " Rank " + groupTarget.rank.toLocaleString() + " is " + groupTarget.title + " at " + TF2.formatPoints(groupTarget.points) + " points";
         sentence += groupTarget.belowPoints != null
-          ? ", and rank " + groupTarget.belowRank.toLocaleString() + " is " + title + " at " + TF2.formatPoints(groupTarget.belowPoints) + " points."
+          ? ", and rank " + groupTarget.belowRank.toLocaleString() + " is " + lowerTitle + " at " + TF2.formatPoints(groupTarget.belowPoints) + " points."
           : ".";
       }
       sentence += remain > 0
