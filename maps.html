@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Maps · TF2 Hub</title>
+    <meta name="description" content="Find a Team Fortress 2 jump map to play next, with Tempus tiers, screenshots, and profile suggestions.">
+    <meta id="theme-color" name="theme-color" content="#14121c">
+    <script>
+      var theme = "dark";
+      try {
+        var savedTheme = localStorage.getItem("tf2-theme");
+        if (savedTheme === "light" || savedTheme === "dark") theme = savedTheme;
+        else if (window.matchMedia("(prefers-color-scheme: light)").matches) theme = "light";
+      } catch (error) {}
+      document.documentElement.dataset.theme = theme;
+      document.getElementById("theme-color").setAttribute("content", theme === "dark" ? "#14121c" : "#F4F2FA");
+    </script>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"></span>TF2 Hub</a>
+        <nav class="site-nav" aria-label="Pages">
+          <a href="index.html">Home</a>
+          <a href="maps.html" aria-current="page">Maps</a>
+          <a href="records.html">Records</a>
+          <a href="ranks.html">Ranks</a>
+          <a href="servers.html">Servers</a>
+          <a href="encyclopedia.html">Encyclopedia</a>
+          <a href="links.html">Links</a>
+        </nav>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="true">Dark theme</button>
+      </div>
+    </header>
+    <main id="main" class="wrap preview-section">
+      <div class="section-head">
+        <h1 class="page-title">Maps</h1>
+        <p>A finder for the next map. Tier 1 is the easiest. Ratings are Good, Decent, Poor, and Bad. The type filter uses the map name prefix, not a separate Tempus field. Screenshots come from Tempus.</p>
+        <p id="jump-status">Loading the Tempus catalog.</p>
+      </div>
+      <div class="modes" id="jump-class" role="toolbar" aria-label="Class">
+        <button type="button" data-class="soldier" aria-pressed="true">Soldier</button>
+        <button type="button" data-class="demoman" aria-pressed="false">Demoman</button>
+      </div>
+      <div class="jump-tiers" id="jump-tiers" role="toolbar" aria-label="Tier"></div>
+      <form class="filter-bar jump-filters" id="jump-filters">
+        <label>Name
+          <input name="query" type="search" aria-label="Map name" placeholder="jump_">
+        </label>
+        <label>Name prefix
+          <select name="type" aria-label="Type from the map name">
+            <option value="all">All</option>
+            <option value="rocket">Rocket jump</option>
+            <option value="sticky">Sticky jump</option>
+            <option value="conc">Conc</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+        <label>Rating
+          <select name="rating" aria-label="Rating">
+            <option value="all">Any</option>
+            <option value="1">Good</option>
+            <option value="2">Decent</option>
+            <option value="3">Poor</option>
+            <option value="4">Bad</option>
+          </select>
+        </label>
+        <label>Layout
+          <select name="layout" aria-label="Layout">
+            <option value="all">Any</option>
+            <option value="bonus">Bonuses</option>
+            <option value="course">Courses</option>
+            <option value="trick">Tricks</option>
+            <option value="linear">Linear</option>
+          </select>
+        </label>
+      </form>
+      <div class="map-toolbar">
+        <p class="filter-count" id="jump-count"></p>
+        <div class="modes" id="map-view" role="toolbar" aria-label="Layout of the map list">
+          <button type="button" data-view="grid" aria-pressed="true">Grid</button>
+          <button type="button" data-view="list" aria-pressed="false">List</button>
+          <button type="button" data-view="table" aria-pressed="false">Table</button>
+        </div>
+      </div>
+      <div id="map-results" class="map-grid"></div>
+      <div class="server-scroll" id="map-table-wrap" hidden>
+        <table class="server-table">
+          <thead>
+            <tr>
+              <th>Map</th>
+              <th>Soldier</th>
+              <th>Demoman</th>
+              <th>Layout</th>
+            </tr>
+          </thead>
+          <tbody id="jump-rows"></tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-ghost" id="map-more">Show more maps</button>
+
+      <section class="recommend" aria-labelledby="recommend-title">
+        <div class="section-head">
+          <h2 id="recommend-title">Suggest from a profile</h2>
+          <p>Looks up a Tempus player and suggests maps for practice, a step up, or maps more likely to matter for rank. The tier band is a suggestion from class rank and how many maps the profile has completed. It is not a Tempus assignment, and it does not know which maps are already finished.</p>
+        </div>
+        <form class="filter-bar recommend-form" id="recommend-form">
+          <label>Tempus player
+            <input name="player" type="search" aria-label="Tempus player name" required>
+          </label>
+          <button type="submit" class="btn btn-primary">Look up</button>
+        </form>
+        <div class="modes" id="recommend-goal" role="toolbar" aria-label="Suggestion">
+          <button type="button" data-goal="practice" aria-pressed="true">Practice</button>
+          <button type="button" data-goal="improve" aria-pressed="false">Improve</button>
+          <button type="button" data-goal="points" aria-pressed="false">Points</button>
+        </div>
+        <p id="recommend-status" class="filter-count"></p>
+        <div class="pick-list" id="recommend-picks"></div>
+        <div id="recommend-results"></div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <div>
+          <p class="logo">TF2 Hub</p>
+          <p class="muted">Unofficial fan page. Team Fortress 2 is a trademark of Valve Corporation. This site is not affiliated with or endorsed by Valve.</p>
+        </div>
+        <div>
+          <p class="footer-label">Pages</p>
+          <a href="records.html">Records</a>
+          <a href="ranks.html">Ranks</a>
+          <a href="servers.html">Servers</a>
+        </div>
+        <div>
+          <p class="footer-label">Repository</p>
+          <a href="https://github.com/Graru1-Wolfy/Webpage">Graru1-Wolfy/Webpage</a>
+        </div>
+      </div>
+    </footer>
+    <script src="js/logic.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/maps.js"></script>
+  </body>
+</html>

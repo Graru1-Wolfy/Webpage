@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Encyclopedia · TF2 Hub</title>
+    <meta name="description" content="Jump websites and Discord servers from ShadowOfLight’s Jump Encyclopedia.">
+    <meta id="theme-color" name="theme-color" content="#14121c">
+    <script>
+      var theme = "dark";
+      try {
+        var savedTheme = localStorage.getItem("tf2-theme");
+        if (savedTheme === "light" || savedTheme === "dark") theme = savedTheme;
+        else if (window.matchMedia("(prefers-color-scheme: light)").matches) theme = "light";
+      } catch (error) {}
+      document.documentElement.dataset.theme = theme;
+      document.getElementById("theme-color").setAttribute("content", theme === "dark" ? "#14121c" : "#F4F2FA");
+    </script>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"></span>TF2 Hub</a>
+        <nav class="site-nav" aria-label="Pages">
+          <a href="index.html">Home</a>
+          <a href="maps.html">Maps</a>
+          <a href="records.html">Records</a>
+          <a href="ranks.html">Ranks</a>
+          <a href="servers.html">Servers</a>
+          <a href="encyclopedia.html" aria-current="page">Encyclopedia</a>
+          <a href="links.html">Links</a>
+        </nav>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="true">Dark theme</button>
+      </div>
+    </header>
+    <main id="main" class="wrap preview-section">
+      <div class="section-head">
+        <h1 class="page-title">Jump encyclopedia</h1>
+        <p>Websites and Discord servers from <a href="https://docs.google.com/spreadsheets/d/1kL76rEPL2AtMSu5RWI2VtW5ZJ2QIQx61BNowdfN-09M/htmlview#gid=1264642306">ShadowOfLight’s Jump Encyclopedia</a>.</p>
+      </div>
+      <div class="encyclopedia">
+        <div>
+          <h2>Websites</h2>
+          <section>
+            <h3>Tempus</h3>
+            <ul class="link-list">
+              <li><a href="https://tempus2.xyz">Tempus Network</a></li>
+              <li><a href="https://tempusplaza.com">Tempus Plaza</a></li>
+              <li><a href="https://www.youtube.com/watch?v=-X00KqLJuPg">Tempus point system</a></li>
+              <li><a href="https://docs.google.com/document/d/1FU_DLzmezpbtM9OJJaJuoeN-tYokrWU26dm7ZWV9oME/edit?tab=t.0">Tempus command list</a></li>
+              <li><a href="https://www.youtube.com/@tempusarchive">Tempus archive</a></li>
+            </ul>
+          </section>
+          <section>
+            <h3>Jumptf</h3>
+            <ul class="link-list">
+              <li><a href="https://jump.tf">Jumptf</a></li>
+              <li><a href="https://jump.tf/forum/">Jumptf forum</a></li>
+              <li><a href="https://www.youtube.com/@TF2RJweekly">TF2RJweekly</a></li>
+            </ul>
+          </section>
+          <section>
+            <h3>SJNetwork</h3>
+            <ul class="link-list">
+              <li><a href="https://sjnetwork.ovh">SJNetwork</a></li>
+            </ul>
+          </section>
+          <section>
+            <h3>Customization</h3>
+            <ul class="link-list">
+              <li><a href="https://github.com/itsmmarc/jumphud">Jump hud</a></li>
+              <li><a href="https://drive.google.com/drive/folders/1HvjqUWgGeWRSiEpdn0natUZELj3rPRAa">Mangler rockets/sound (to stock)</a></li>
+              <li><a href="https://gamebanana.com/mods/542567">Mangler stock like skin</a></li>
+              <li><a href="https://gamebanana.com/mods/12415">Remove rocket trail (stock/original)</a></li>
+              <li><a href="https://drive.google.com/file/d/1fx7olVPWkRwH50wDLuMNWc6jkmF2LfdE/view?usp=sharing">Remove bubles</a></li>
+              <li><a href="https://github.com/bakapear/hudmods/tree/main">Hudmods (speedo etc)</a></li>
+              <li><a href="https://github.com/Elandi-rj/sprays">Sprays</a></li>
+              <li><a href="https://www.youtube.com/watch?v=6GmzKExCy_0">Texture replacing</a></li>
+              <li><a href="https://steamcommunity.com/sharedfiles/filedetails/?id=1514650207">Custom background</a></li>
+            </ul>
+          </section>
+          <section>
+            <h3>Tools</h3>
+            <ul class="link-list">
+              <li><a href="https://jump.tf/forum/index.php?topic=3294.0">Offline jumppack</a></li>
+              <li><a href="https://elandi-rj.github.io/vmf2box/">Box maker</a></li>
+              <li><a href="https://imgur.com/a/how-to-increase-size-of-cl-showpos-e2oxsdI">How to increase the size of cl_showpos</a></li>
+              <li><a href="https://jump.tf/forum/index.php?topic=3367.0">Zipline</a></li>
+              <li><a href="https://bakapear.github.io/bcheck/">Bounce checker</a></li>
+            </ul>
+          </section>
+          <section>
+            <h3>Information</h3>
+            <ul class="link-list">
+              <li><a href="https://docs.google.com/spreadsheets/u/0/d/1907vPaXC_hS7HJaVnO2ugTOcV4ztIUzsOAQGs_5hwPY/htmlview">haydos - Tempus Map Recommendations</a></li>
+              <li><a href="https://www.youtube.com/watch?v=NsWmYZu1GHA">TF2 Jump - How to angled bhop</a></li>
+              <li><a href="https://jumpacademy.tf">Jump academy</a></li>
+              <li><a href="https://www.dropbox.com/scl/fi/c0vxjztou9xj0of1zamer/Review.pdf?rlkey=rv9l35ze3uvhbk5llnwl1ld0k&amp;e=2&amp;dl=0">Ildprut source engine thesis</a></li>
+            </ul>
+          </section>
+        </div>
+        <aside>
+          <h2>Discord servers</h2>
+          <ul class="link-list">
+            <li><a href="https://discord.gg/x9J4hVd96q">Tempus Network</a></li>
+            <li><a href="https://discord.gg/fNuYx7gHqT">Jump Fortress</a></li>
+            <li><a href="https://discord.gg/yQAJWDqkgA">TF2RJweekly</a></li>
+            <li><a href="https://discord.gg/YdNcxnuUwK">Jump Jam</a></li>
+          </ul>
+        </aside>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <div>
+          <p class="logo">TF2 Hub</p>
+          <p class="muted">Unofficial fan page. Team Fortress 2 is a trademark of Valve Corporation. This site is not affiliated with or endorsed by Valve.</p>
+        </div>
+        <div>
+          <p class="footer-label">Pages</p>
+          <a href="links.html">Links</a>
+          <a href="maps.html">Maps</a>
+        </div>
+        <div>
+          <p class="footer-label">Repository</p>
+          <a href="https://github.com/Graru1-Wolfy/Webpage">Graru1-Wolfy/Webpage</a>
+        </div>
+      </div>
+    </footer>
+    <script src="js/common.js"></script>
+  </body>
+</html>

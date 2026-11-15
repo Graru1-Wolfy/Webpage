@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Jump servers · TF2 Hub</title>
+    <meta name="description" content="Tempus and Jump Academy servers, with rank limits only on Tempus and password servers listed last.">
+    <meta id="theme-color" name="theme-color" content="#14121c">
+    <script>
+      var theme = "dark";
+      try {
+        var savedTheme = localStorage.getItem("tf2-theme");
+        if (savedTheme === "light" || savedTheme === "dark") theme = savedTheme;
+        else if (window.matchMedia("(prefers-color-scheme: light)").matches) theme = "light";
+      } catch (error) {}
+      document.documentElement.dataset.theme = theme;
+      document.getElementById("theme-color").setAttribute("content", theme === "dark" ? "#14121c" : "#F4F2FA");
+    </script>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"></span>TF2 Hub</a>
+        <nav class="site-nav" aria-label="Pages">
+          <a href="index.html">Home</a>
+          <a href="maps.html">Maps</a>
+          <a href="records.html">Records</a>
+          <a href="ranks.html">Ranks</a>
+          <a href="servers.html" aria-current="page">Servers</a>
+          <a href="encyclopedia.html">Encyclopedia</a>
+          <a href="links.html">Links</a>
+        </nav>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="true">Dark theme</button>
+      </div>
+    </header>
+    <main id="main">
+      <section class="wrap preview-section" id="community">
+        <div class="section-head">
+          <h1 class="page-title">Jump servers</h1>
+          <p id="server-status">Loading Tempus and Jump Academy status.</p>
+          <p>Tempus and Jump Academy are listed separately. Rank limits such as top 100 belong to Tempus and are copied only when the server name says “Rank N”. Jump Academy has no player rank requirement. Latency is a regional estimate, not a measured ping. Tier is inferred from the server name. A password is shown only when a Steam server query reported one, and those servers are sorted to the bottom. Within the open servers, the order is region, then easy to advanced, then name.</p>
+        </div>
+        <div class="metrics" id="community-stats"></div>
+
+        <section aria-labelledby="tempus-title">
+          <div class="section-head">
+            <h2 id="tempus-title">Tempus</h2>
+            <p>A top-100 filter keeps servers whose stated limit is 100 or looser, including servers that do not state a limit. It hides a tighter limit, such as top 50.</p>
+          </div>
+          <form class="filter-bar" id="tempus-filters">
+            <label>Region
+              <select name="region" aria-label="Tempus region">
+                <option value="all">All</option>
+                <option>Europe</option>
+                <option>North America</option>
+                <option>Asia</option>
+                <option>Oceania</option>
+                <option>South America</option>
+                <option>Africa</option>
+              </select>
+            </label>
+            <label>Est. latency
+              <select name="latency" aria-label="Tempus estimated latency">
+                <option value="all">Any</option>
+                <option value="80">Under 80 ms</option>
+                <option value="150">Under 150 ms</option>
+                <option value="250">Under 250 ms</option>
+              </select>
+            </label>
+            <label>Est. tier
+              <select name="tier" aria-label="Tempus estimated tier">
+                <option value="all">Any</option>
+                <option>Beginner</option>
+                <option>Intermediate</option>
+                <option>Advanced</option>
+                <option>Mixed</option>
+              </select>
+            </label>
+            <label>Rank
+              <select name="rank" aria-label="Tempus rank limit">
+                <option value="all">Any</option>
+                <option value="open">Not stated</option>
+                <option value="1000">Top 1000</option>
+                <option value="500">Top 500</option>
+                <option value="200">Top 200</option>
+                <option value="100">Top 100</option>
+                <option value="50">Top 50</option>
+              </select>
+            </label>
+            <label>Players
+              <select name="players" aria-label="Tempus players">
+                <option value="all">Any</option>
+                <option value="1">1 or more</option>
+                <option value="5">5 or more</option>
+                <option value="8">8 or more</option>
+              </select>
+            </label>
+          </form>
+          <p class="filter-count" id="tempus-count"></p>
+          <div class="server-scroll">
+            <table class="server-table">
+              <thead>
+                <tr>
+                  <th>Server</th>
+                  <th>Region</th>
+                  <th>Est. tier</th>
+                  <th>Rank</th>
+                  <th>Password</th>
+                  <th>Map</th>
+                  <th>Players</th>
+                  <th>Est. latency</th>
+                  <th>Address</th>
+                </tr>
+              </thead>
+              <tbody id="tempus-rows" class="server-rows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section aria-labelledby="academy-title">
+          <div class="section-head">
+            <h2 id="academy-title">Jump Academy</h2>
+            <p>No rank gate. Addresses come from the Jump Academy servers page. The name, map, players, and password come from a Steam server query of those addresses.</p>
+          </div>
+          <form class="filter-bar" id="academy-filters">
+            <label>Region
+              <select name="region" aria-label="Jump Academy region">
+                <option value="all">All</option>
+                <option>Europe</option>
+                <option>North America</option>
+                <option>Asia</option>
+                <option>Oceania</option>
+                <option>South America</option>
+                <option>Africa</option>
+              </select>
+            </label>
+            <label>Est. latency
+              <select name="latency" aria-label="Jump Academy estimated latency">
+                <option value="all">Any</option>
+                <option value="80">Under 80 ms</option>
+                <option value="150">Under 150 ms</option>
+                <option value="250">Under 250 ms</option>
+              </select>
+            </label>
+            <label>Est. tier
+              <select name="tier" aria-label="Jump Academy estimated tier">
+                <option value="all">Any</option>
+                <option>Beginner</option>
+                <option>Intermediate</option>
+                <option>Advanced</option>
+                <option>Mixed</option>
+              </select>
+            </label>
+            <label>Players
+              <select name="players" aria-label="Jump Academy players">
+                <option value="all">Any</option>
+                <option value="1">1 or more</option>
+                <option value="5">5 or more</option>
+                <option value="8">8 or more</option>
+              </select>
+            </label>
+          </form>
+          <p class="filter-count" id="academy-count"></p>
+          <div class="server-scroll">
+            <table class="server-table">
+              <thead>
+                <tr>
+                  <th>Server</th>
+                  <th>Region</th>
+                  <th>Est. tier</th>
+                  <th>Password</th>
+                  <th>Map</th>
+                  <th>Players</th>
+                  <th>Est. latency</th>
+                  <th>Address</th>
+                </tr>
+              </thead>
+              <tbody id="academy-rows" class="server-rows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <div>
+          <p class="logo">TF2 Hub</p>
+          <p class="muted">Unofficial fan page. Team Fortress 2 is a trademark of Valve Corporation. This site is not affiliated with or endorsed by Valve.</p>
+        </div>
+        <div>
+          <p class="footer-label">Pages</p>
+          <a href="maps.html">Maps</a>
+          <a href="index.html">Home</a>
+        </div>
+        <div>
+          <p class="footer-label">Repository</p>
+          <a href="https://github.com/Graru1-Wolfy/Webpage">Graru1-Wolfy/Webpage</a>
+        </div>
+      </div>
+    </footer>
+    <script src="js/logic.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/servers.js"></script>
+  </body>
+</html>
