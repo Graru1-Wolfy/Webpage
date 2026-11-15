@@ -8,6 +8,11 @@
   var selectedPlayer = null;
   var playerStats = null;
   var playerRecords = null;
+  var plazaMaps = [];
+  var plazaByName = Object.create(null);
+  var plazaRanks = null;
+  var tierChoice = null;
+  var selectedTags = Object.create(null);
   var recordsState = "idle";
   var lookupToken = 0;
   var searchResults = [];
@@ -25,6 +30,10 @@
   var recommendStatus = document.getElementById("recommend-status");
   var recommendPicks = document.getElementById("recommend-picks");
   var recommendResults = document.getElementById("recommend-results");
+  var recommendRefine = document.getElementById("recommend-refine");
+  var suggestCap = document.getElementById("suggest-cap");
+  var suggestTags = document.getElementById("suggest-tags");
+  var suggestCapLabel = document.getElementById("suggest-cap-label");
   var goalBar = document.getElementById("recommend-goal");
 
   try {
@@ -79,13 +88,29 @@
     goal = button.getAttribute("data-goal");
     renderSuggestions();
   });
+  suggestCap.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-cap]");
+    if (!button) return;
+    var value = button.getAttribute("data-cap");
+    tierChoice = value === "auto" ? null : Number(value);
+    renderSuggestions();
+  });
+  suggestTags.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-tag]");
+    if (!button) return;
+    var tag = button.getAttribute("data-tag");
+    if (!tag) return;
+    if (selectedTags[tag]) delete selectedTags[tag];
+    else selectedTags[tag] = true;
+    renderSuggestions();
+  });
   recommendForm.addEventListener("submit", function (event) {
     event.preventDefault();
     var query = new FormData(recommendForm).get("player");
     query = String(query || "").trim();
     selectedPlayer = null;
     playerStats = null;
-    playerRecords = null;
+    clearPlaza();
     recordsState = "idle";
     lookupToken += 1;
     searchResults = [];
@@ -137,15 +162,18 @@
     selectedPlayer = player;
     searchResults = [];
     playerStats = null;
-    playerRecords = null;
+    clearPlaza();
     recordsState = "loading";
     var token = ++lookupToken;
     renderPicks();
     recommendStatus.textContent = "Loading the Tempus profile and finished maps for " + player.name + ".";
-    TF2.loadPlazaRecords(player.id).then(function (records) {
+    TF2.loadPlazaRecords(player.id).then(function (payload) {
       if (token !== lookupToken) return;
-      playerRecords = records;
+      playerRecords = payload.records;
+      rememberPlaza(payload.maps);
+      plazaRanks = payload.ranks || null;
       recordsState = "ready";
+      renderMaps();
       renderSuggestions();
     }).catch(function () {
       if (token !== lookupToken) return;
@@ -248,7 +276,31 @@
     rows.innerHTML = slice.map(rowHtml).join("");
   }
 
-  function cardHtml(map) {
+  function clearPlaza() {
+    playerRecords = null;
+    plazaRanks = null;
+    tierChoice = null;
+    selectedTags = Object.create(null);
+    rememberPlaza([]);
+  }
+
+  function rememberPlaza(list) {
+    plazaMaps = list || [];
+    plazaByName = Object.create(null);
+    plazaMaps.forEach(function (map) {
+      if (map && map.name) plazaByName[map.name] = map;
+    });
+  }
+
+  function tagsFor(name) {
+    return TF2.mapTagNames(plazaByName[name], jumpClass);
+  }
+
+  function classTitle() {
+    return jumpClass === "demoman" ? "Demoman" : "Soldier";
+  }
+
+  function cardHtml(map, note) {
     var page = TF2.mapPageUrl(map.name);
     var shot = TF2.screenshotUrl(map.name);
     var image = shot
@@ -257,9 +309,15 @@
     var detail = TF2.classLabel(TF2.classTier(map, jumpClass), TF2.classRating(map, jumpClass));
     var open = page ? '<a class="map-card" href="' + page + '">' : '<article class="map-card">';
     var close = page ? "</a>" : "</article>";
+    var tags = tagsFor(map.name);
+    var tagLine = tags.length
+      ? '<span>' + TF2.escapeHtml(tags.slice(0, 3).join(" · ") + (tags.length > 3 ? " · +" + (tags.length - 3) : "")) + "</span>"
+      : "";
+    var noteLine = typeof note === "string" && note ? "<span>" + TF2.escapeHtml(note) + "</span>" : "";
     return open + image +
       '<div class="map-card-body"><strong>' + TF2.escapeHtml(map.name) + "</strong><span>" +
-      TF2.escapeHtml(detail) + "</span><span>" + TF2.escapeHtml(TF2.layoutLabel(map)) + "</span></div>" + close;
+      TF2.escapeHtml(detail) + "</span><span>" + TF2.escapeHtml(TF2.layoutLabel(map)) + "</span>" +
+      noteLine + tagLine + "</div>" + close;
   }
 
   function rowHtml(map) {
@@ -269,10 +327,13 @@
       : TF2.escapeHtml(map.name);
     var detail = map.authors || "";
     if (map.kind !== "rocket") detail = TF2.kindLabels[map.kind] + (detail ? " · " + detail : "");
+    var tags = tagsFor(map.name);
+    var layout = TF2.layoutLabel(map);
+    if (tags.length) layout += " · " + tags.slice(0, 3).join(" · ");
     return "<tr><td data-label=\"Map\"><strong>" + name + '</strong><span class="class-role">' + TF2.escapeHtml(detail) +
       "</span></td><td data-label=\"Soldier\">" + classCell(map.s, map.sr, map.sv) +
       "</td><td data-label=\"Demoman\">" + classCell(map.d, map.dr, map.dv) +
-      "</td><td data-label=\"Layout\">" + TF2.escapeHtml(TF2.layoutLabel(map)) + "</td></tr>";
+      "</td><td data-label=\"Layout\">" + TF2.escapeHtml(layout) + "</td></tr>";
   }
 
   function classCell(tier, rating, video) {
@@ -293,8 +354,16 @@
     });
     if (!selectedPlayer || !playerStats) {
       recommendResults.innerHTML = "";
+      recommendRefine.hidden = true;
       return;
     }
+    var established = recordsState === "ready" ? TF2.establishedTier(playerRecords, jumpClass) : 0;
+    if (established > 0) renderRichSuggestions(established);
+    else renderBandSuggestions();
+  }
+
+  function renderBandSuggestions() {
+    recommendRefine.hidden = true;
     var classId = jumpClass === "demoman" ? "4" : "3";
     var classRank = playerStats.class_rank_info[classId] || {};
     var completions = playerStats.pr_stats && playerStats.pr_stats.map ? playerStats.pr_stats.map.count : null;
@@ -310,27 +379,165 @@
     }).slice(0, 12);
     var tierText = band.min === band.max ? "tier " + band.min : band.max >= 99 ? "tier " + band.min + " and above" : "tiers " + band.min + "–" + band.max;
     var profile = selectedPlayer.name + " is " + (classRank.title ? classRank.title + ", " : "") +
-      (rank ? "rank " + rank.toLocaleString() : "unranked") + " on " + (jumpClass === "demoman" ? "Demoman" : "Soldier");
+      (rank ? "rank " + rank.toLocaleString() : "unranked") + " on " + classTitle();
     if (points != null) profile += " with " + Math.round(points).toLocaleString() + " points";
     if (typeof completions === "number") profile += ". Map completions on the profile: " + completions.toLocaleString();
     profile += ". Suggested " + tierText + ".";
     var caveat = " This tier band is a suggestion from the class rank and completion count. Points shown are the profile total, not a calculated reward for a map.";
     if (recordsState === "ready") {
       var finishedCount = finished ? Object.keys(finished).length : 0;
-      caveat += " Left out " + finishedCount.toLocaleString() + " finished " +
-        (jumpClass === "demoman" ? "Demoman" : "Soldier") +
+      var detailed = (playerRecords || []).some(function (row) { return row && typeof row.tier === "number"; });
+      caveat += " Left out " + finishedCount.toLocaleString() + " finished " + classTitle() +
         " maps reported by Tempus Plaza for this visit. This site does not keep a copy.";
+      if (playerRecords && playerRecords.length && !detailed) {
+        caveat += " The lookup did not include tier, group, or points, so this band still comes from class rank and completion count.";
+      }
     } else if (recordsState === "loading") {
       caveat += " Finished maps from Tempus Plaza are still loading.";
     } else {
       caveat += " Tempus Plaza did not return the finished maps, so a suggestion may already be completed.";
     }
     recommendStatus.textContent = profile + caveat;
+    showSuggestionMaps(maps, function (map) { return cardHtml(map); });
+  }
+
+  function renderRichSuggestions(established) {
+    var info = classStanding();
+    var gap = TF2.pointsGap(plazaRanks, jumpClass);
+    var result = TF2.selectSuggestions(TF2.catalog.maps || [], {
+      jumpClass: jumpClass,
+      goal: goal,
+      records: playerRecords,
+      plazaMaps: plazaMaps,
+      maxTier: tierChoice,
+      tags: Object.keys(selectedTags),
+      gap: gap
+    });
+    recommendRefine.hidden = false;
+    renderCap(established);
+    renderTagChips(result.tagCounts);
+    recommendStatus.textContent = richStatus(result, info, gap);
+    if (!result.items.length) {
+      recommendResults.className = "";
+      recommendResults.innerHTML = '<p class="empty-row">' + TF2.escapeHtml(emptySuggestion(result)) + "</p>";
+      return;
+    }
+    showSuggestionMaps(result.items, function (item) {
+      var note = goal === "points" && item.points != null
+        ? TF2.formatPoints(item.points) + " pts · " + (item.group || "G5")
+        : "";
+      return cardHtml(item.map, note);
+    });
+  }
+
+  function classStanding() {
+    var key = jumpClass === "demoman" ? "demoman" : "soldier";
+    var plaza = plazaRanks && plazaRanks[key];
+    if (plaza && typeof plaza.rank === "number" && typeof plaza.points === "number") {
+      return { rank: plaza.rank, points: plaza.points, next: typeof plaza.next_points === "number" ? plaza.next_points : null, source: "Tempus Plaza" };
+    }
+    var classId = jumpClass === "demoman" ? "4" : "3";
+    var classRank = playerStats.class_rank_info[classId] || {};
+    return {
+      rank: typeof classRank.rank === "number" ? classRank.rank : null,
+      points: typeof classRank.points === "number" ? classRank.points : null,
+      next: null,
+      source: "the Tempus profile"
+    };
+  }
+
+  function richStatus(result, info, gap) {
+    var label = classTitle();
+    var sentence = selectedPlayer.name + " is " + label;
+    if (info.rank) sentence += " rank " + info.rank.toLocaleString();
+    if (info.points != null) sentence += " with " + TF2.formatPoints(info.points) + " points on " + info.source;
+    sentence += ".";
+    if (info.next != null && info.points != null) {
+      var remain = info.next - info.points;
+      sentence += remain > 0
+        ? " The next " + label + " rank on the Plaza points table has " + TF2.formatPoints(info.next) + " points, so " + TF2.formatPoints(remain) + " points remain."
+        : " The next listed " + label + " total is " + TF2.formatPoints(info.next) + " points.";
+    } else if (info.rank === 1 && info.source === "Tempus Plaza") {
+      sentence += " This is the top " + label + " rank on the Plaza points table.";
+    } else if (info.source === "Tempus Plaza") {
+      sentence += " The points for the next " + label + " rank were not available.";
+    }
+    var usual = TF2.usualGroup(playerRecords, jumpClass);
+    sentence += " Finished " + label + " maps put the comfortable tier at " + result.established + (usual ? ", and the usual group is " + usual : "") + ".";
+    sentence += " " + tierWindow(result);
+    if (tierChoice != null && tierChoice > result.established + 2) {
+      sentence += " Tier " + tierChoice + " is more than two tiers above the comfortable tier, so a finish is much less likely.";
+    }
+    if (goal === "points") {
+      sentence += " Point values use the Tempus Plaza calculator for the usual group on that tier. A tier with no finish yet is counted as G5, which is completion points only.";
+      if (gap > 0 && result.items.length && result.items.every(function (item) { return item.tier <= result.established; })) {
+        sentence += " These maps can cover the " + TF2.formatPoints(gap) + " points at the comfortable tier.";
+      }
+    }
+    var finishedCount = Object.keys(TF2.finishedMapNames(playerRecords, jumpClass)).length;
+    sentence += " Left out " + finishedCount.toLocaleString() + " finished " + label + " maps for this visit. This site does not keep a copy.";
+    return sentence;
+  }
+
+  function tierWindow(result) {
+    if (goal === "practice") {
+      var floor = Math.max(1, result.established - 1);
+      return floor === result.cap ? "Practice stays on tier " + floor + "." : "Practice stays on tiers " + floor + "–" + result.cap + ".";
+    }
+    if (goal === "improve") {
+      if (result.cap < result.established + 1) return "The highest tier is " + result.cap + ", under the next step.";
+      var start = result.established + 1;
+      return start === result.cap ? "The step up stays on tier " + start + "." : "The step up stays on tiers " + start + "–" + result.cap + ".";
+    }
+    return "Suggestions stay at tier " + result.cap + " and below.";
+  }
+
+  function emptySuggestion(result) {
+    if (Object.keys(selectedTags).length) return "No unfinished maps inside this tier limit have the selected tags.";
+    if (goal === "improve" && result.cap < result.established + 1) {
+      return "The highest tier is " + result.cap + ". The next step above the comfortable tier is " + (result.established + 1) + ".";
+    }
+    if (goal === "improve") return "No unfinished " + classTitle() + " maps are on the next tier inside this limit.";
+    if (goal === "practice") return "No unfinished " + classTitle() + " maps remain on the comfortable tiers.";
+    return "No unfinished " + classTitle() + " maps inside this tier limit can add points.";
+  }
+
+  function renderCap(established) {
+    var buttons = ['<button type="button" data-cap="auto" aria-pressed="' + (tierChoice == null ? "true" : "false") + '">Auto</button>'];
+    for (var tier = 1; tier <= 10; tier++) {
+      buttons.push('<button type="button" data-cap="' + tier + '" aria-pressed="' + (tierChoice === tier ? "true" : "false") + '">T' + tier + "</button>");
+    }
+    suggestCap.innerHTML = buttons.join("");
+    suggestCapLabel.textContent = "Highest tier. Comfortable tier is " + established + ".";
+  }
+
+  function renderTagChips(tagCounts) {
+    var names = Object.keys(tagCounts || {});
+    names.sort(function (a, b) {
+      return tagCounts[b] - tagCounts[a] || (a < b ? -1 : a > b ? 1 : 0);
+    });
+    var shown = names.slice(0, 12);
+    Object.keys(selectedTags).forEach(function (tag) {
+      if (!tagCounts || !tagCounts[tag]) {
+        delete selectedTags[tag];
+        return;
+      }
+      if (shown.indexOf(tag) === -1) shown.push(tag);
+    });
+    suggestTags.hidden = !shown.length;
+    suggestTags.innerHTML = shown.map(function (tag) {
+      return '<button type="button" data-tag="' + TF2.escapeHtml(tag) + '" aria-pressed="' +
+        (selectedTags[tag] ? "true" : "false") + '">' + TF2.escapeHtml(tag) + "</button>";
+    }).join("");
+  }
+
+  function showSuggestionMaps(maps, html) {
     if (!maps.length) {
+      recommendResults.className = "";
       recommendResults.innerHTML = '<p class="empty-row">No maps in the catalog match this suggestion.</p>';
       return;
     }
     recommendResults.className = "map-grid";
-    recommendResults.innerHTML = maps.map(cardHtml).join("");
+    recommendResults.innerHTML = maps.map(html).join("");
   }
 })();

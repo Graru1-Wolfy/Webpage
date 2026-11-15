@@ -356,17 +356,243 @@
     return tier >= band.min && tier <= band.max;
   }
 
-  function finishedMapNames(records, jumpClass) {
-    var names = Object.create(null);
-    if (!Array.isArray(records)) return names;
+  function mapRows(records, jumpClass) {
     var expected = jumpClass === "demoman" ? "demoman" : "soldier";
+    var seen = Object.create(null);
+    var rows = [];
+    if (!Array.isArray(records)) return rows;
     for (var i = 0; i < records.length; i++) {
       var row = records[i];
       if (!row || row.class !== expected) continue;
+      if (row.type && row.type !== "map") continue;
       if (typeof row.map !== "string" || !/^[A-Za-z0-9_]+$/.test(row.map)) continue;
-      names[row.map] = true;
+      if (seen[row.map]) continue;
+      seen[row.map] = true;
+      rows.push(row);
     }
+    return rows;
+  }
+
+  function finishedMapNames(records, jumpClass) {
+    var names = Object.create(null);
+    mapRows(records, jumpClass).forEach(function (row) {
+      names[row.map] = true;
+    });
     return names;
+  }
+
+  // Tempus Plaza points calculator:
+  // completion points for the tier, plus rating points times the group percentage.
+  var completionTable = {
+    map: [1, 2.5, 5, 10, 25, 50, 100, 200, 300, 400],
+    course: [0.5, 1, 2, 5, 12, 25, 50, 100, 150, 200],
+    bonus: [0.2, 0.5, 1, 2, 5, 10, 20, 50, 75, 100]
+  };
+  var ratingTable = {
+    map: [1000, 700, 200, 0],
+    course: [500, 250, 75, 0],
+    bonus: [200, 75, 20, 0]
+  };
+  var placementPercent = {
+    1: 1, 2: 0.5, 3: 0.4, 4: 0.35, 5: 0.3, 6: 0.25, 7: 0.225, 8: 0.2,
+    9: 0.175, 10: 0.15, 11: 0.05, 12: 0.02, 13: 0.01, 14: 0.002, 15: 0
+  };
+
+  function plazaPoints(type, tier, rating, placement) {
+    var completion = completionTable[type];
+    var ratingPoints = ratingTable[type];
+    var t = Math.floor(Number(tier));
+    var r = Math.floor(Number(rating));
+    var p = Math.floor(Number(placement));
+    if (!completion || t < 1 || t > 10 || r < 1 || r > 4 || !Object.prototype.hasOwnProperty.call(placementPercent, p)) return null;
+    return completion[t - 1] + ratingPoints[r - 1] * placementPercent[p];
+  }
+
+  function groupName(placement) {
+    var value = Math.floor(Number(placement));
+    if (value === 1) return "WR";
+    if (value >= 2 && value <= 10) return "TT";
+    if (value >= 11 && value <= 15) return "G" + (value - 10);
+    return "";
+  }
+
+  function formatPoints(value) {
+    if (typeof value !== "number" || !isFinite(value)) return "";
+    var rounded = Math.round(value * 100) / 100;
+    return rounded.toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
+  }
+
+  function establishedTier(records, jumpClass) {
+    var counts = Object.create(null);
+    var total = 0;
+    mapRows(records, jumpClass).forEach(function (row) {
+      var tier = Math.floor(Number(row.tier));
+      if (tier < 1 || tier > 10) return;
+      counts[tier] = (counts[tier] || 0) + 1;
+      total += 1;
+    });
+    if (!total) return 0;
+    var minimum = Math.max(3, Math.ceil(total * 0.05));
+    var tier;
+    for (tier = 10; tier >= 1; tier--) {
+      if ((counts[tier] || 0) >= minimum) return tier;
+    }
+    for (tier = 10; tier >= 1; tier--) {
+      if (counts[tier]) return tier;
+    }
+    return 0;
+  }
+
+  function tierCap(established, goal, chosen) {
+    var picked = Math.floor(Number(chosen));
+    if (picked >= 1 && picked <= 10) return picked;
+    if (!established) return 0;
+    var extra = goal === "practice" ? 0 : goal === "improve" ? 1 : 2;
+    return Math.min(10, established + extra);
+  }
+
+  function typicalPlacement(records, jumpClass, tier) {
+    var places = [];
+    mapRows(records, jumpClass).forEach(function (row) {
+      if (Math.floor(Number(row.tier)) !== Math.floor(Number(tier))) return;
+      var placement = Math.floor(Number(row.placement));
+      if (placement >= 1 && placement <= 15) places.push(placement);
+    });
+    if (!places.length) return 15;
+    places.sort(function (a, b) { return a - b; });
+    return places[Math.floor((places.length - 1) / 2)];
+  }
+
+  function usualGroup(records, jumpClass) {
+    var counts = Object.create(null);
+    mapRows(records, jumpClass).forEach(function (row) {
+      var name = groupName(row.placement);
+      if (!name) return;
+      counts[name] = (counts[name] || 0) + 1;
+    });
+    var best = "";
+    var bestCount = 0;
+    Object.keys(counts).forEach(function (name) {
+      if (counts[name] > bestCount) {
+        best = name;
+        bestCount = counts[name];
+      }
+    });
+    return best;
+  }
+
+  function pointsGap(ranks, jumpClass) {
+    if (!ranks) return null;
+    var row = jumpClass === "demoman" ? ranks.demoman : ranks.soldier;
+    if (!row || typeof row.points !== "number" || typeof row.next_points !== "number") return null;
+    return row.next_points - row.points;
+  }
+
+  function mapTagNames(info, jumpClass) {
+    if (!info || !Array.isArray(info.tags)) return [];
+    var allowed = jumpClass === "demoman"
+      ? { demoman: true, both: true, extra: true }
+      : { soldier: true, both: true, extra: true };
+    var names = [];
+    info.tags.forEach(function (tag) {
+      if (!tag || typeof tag.name !== "string") return;
+      if (tag.class && !allowed[tag.class]) return;
+      names.push(tag.name);
+    });
+    return names;
+  }
+
+  function suggestionTier(map, jumpClass, info) {
+    if (info) {
+      var plazaTier = jumpClass === "demoman" ? info.demoman_tier : info.soldier_tier;
+      if (typeof plazaTier === "number" && plazaTier >= 1) return plazaTier;
+    }
+    return classTier(map, jumpClass);
+  }
+
+  function suggestionRating(map, jumpClass, info) {
+    if (info) {
+      var plazaRating = jumpClass === "demoman" ? info.demoman_rating : info.soldier_rating;
+      if (typeof plazaRating === "number" && plazaRating >= 1 && plazaRating <= 4) return plazaRating;
+    }
+    var rating = classRating(map, jumpClass);
+    return rating >= 1 && rating <= 4 ? rating : 4;
+  }
+
+  function comparePointGap(a, b, gap) {
+    function over(item) {
+      if (item.points == null) return 200000;
+      if (item.points >= gap) return item.points - gap;
+      return 100000 + (gap - item.points);
+    }
+    var diff = over(a) - over(b);
+    if (diff) return diff;
+    if (a.tier !== b.tier) return a.tier - b.tier;
+    return a.map.name < b.map.name ? -1 : a.map.name > b.map.name ? 1 : 0;
+  }
+
+  function selectSuggestions(catalog, options) {
+    options = options || {};
+    var jumpClass = options.jumpClass === "demoman" ? "demoman" : "soldier";
+    var goal = options.goal || "practice";
+    var records = options.records || [];
+    var established = establishedTier(records, jumpClass);
+    var cap = tierCap(established, goal, options.maxTier);
+    var finished = finishedMapNames(records, jumpClass);
+    var plaza = Object.create(null);
+    (options.plazaMaps || []).forEach(function (map) {
+      if (map && typeof map.name === "string") plaza[map.name] = map;
+    });
+    var wanted = Array.isArray(options.tags) ? options.tags : [];
+    var floor = 1;
+    if (goal === "practice") floor = Math.max(1, established - 1);
+    if (goal === "improve") floor = established + 1;
+    var items = [];
+    var tagCounts = Object.create(null);
+    (catalog || []).forEach(function (map) {
+      if (!map || finished[map.name]) return;
+      var info = plaza[map.name];
+      var tier = suggestionTier(map, jumpClass, info);
+      if (!tier || tier > cap) return;
+      var tags = mapTagNames(info, jumpClass);
+      if (tier >= floor) {
+        tags.forEach(function (tag) {
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+      }
+      if (tier < floor) return;
+      if (wanted.length && !wanted.some(function (tag) { return tags.indexOf(tag) !== -1; })) return;
+      var rating = suggestionRating(map, jumpClass, info);
+      var placement = typicalPlacement(records, jumpClass, tier);
+      items.push({
+        map: map,
+        tier: tier,
+        rating: rating,
+        placement: placement,
+        group: groupName(placement),
+        points: plazaPoints("map", tier, rating, placement),
+        tags: tags
+      });
+    });
+    var gap = typeof options.gap === "number" ? options.gap : null;
+    if (goal === "points" && gap != null && gap > 0) {
+      var comfortable = items.filter(function (item) {
+        return item.tier <= established && item.points != null && item.points >= gap;
+      });
+      var pool = comfortable;
+      if (!pool.length && typeof options.maxTier !== "number") {
+        pool = items.filter(function (item) { return item.tier <= Math.min(cap, established + 1); });
+      }
+      if (!pool.length) pool = items;
+      pool.sort(function (a, b) { return comparePointGap(a, b, gap); });
+      return { established: established, cap: cap, tagCounts: tagCounts, items: pool.slice(0, 12) };
+    }
+    items.sort(function (a, b) {
+      if (a.tier !== b.tier) return a.tier - b.tier;
+      if (a.rating !== b.rating) return a.rating - b.rating;
+      return a.map.name < b.map.name ? -1 : a.map.name > b.map.name ? 1 : 0;
+    });
+    return { established: established, cap: cap, tagCounts: tagCounts, items: items.slice(0, 12) };
   }
 
   function compareSuggested(a, b, jumpClass, goal) {
@@ -471,6 +697,16 @@
     mapInBand: mapInBand,
     finishedMapNames: finishedMapNames,
     compareSuggested: compareSuggested,
+    plazaPoints: plazaPoints,
+    groupName: groupName,
+    formatPoints: formatPoints,
+    establishedTier: establishedTier,
+    tierCap: tierCap,
+    typicalPlacement: typicalPlacement,
+    usualGroup: usualGroup,
+    pointsGap: pointsGap,
+    mapTagNames: mapTagNames,
+    selectSuggestions: selectSuggestions,
     classLabel: classLabel,
     layoutLabel: layoutLabel,
     zoneLabel: zoneLabel,
