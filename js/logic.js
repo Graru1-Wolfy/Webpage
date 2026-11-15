@@ -585,6 +585,36 @@
     return null;
   }
 
+  function rankChoices() {
+    var choices = [];
+    rankTitles.forEach(function (row) {
+      if (row.maxRank == null) return;
+      if (!row.levels) {
+        choices.push({
+          title: row.title,
+          label: row.title,
+          minRank: row.minRank,
+          maxRank: row.maxRank,
+          belowRank: row.maxRank + 1
+        });
+        return;
+      }
+      var size = (row.maxRank - row.minRank + 1) / row.levels;
+      for (var level = 1; level <= row.levels; level++) {
+        var levelMin = row.minRank + (level - 1) * size;
+        var levelMax = levelMin + size - 1;
+        choices.push({
+          title: row.title,
+          label: row.title + " " + rankNumerals[level],
+          minRank: levelMin,
+          maxRank: levelMax,
+          belowRank: levelMax + 1
+        });
+      }
+    });
+    return choices;
+  }
+
   function nextRankStep(rank) {
     var current = rankTitle(rank);
     if (!current) return null;
@@ -717,6 +747,7 @@
       });
     });
     var gap = typeof options.gap === "number" ? options.gap : null;
+    var limit = typeof options.limit === "number" ? options.limit : 12;
     if (goal === "points" && gap != null && gap > 0) {
       var comfortable = items.filter(function (item) {
         return item.tier <= established && item.points != null && item.points >= gap;
@@ -727,14 +758,14 @@
       }
       if (!pool.length) pool = items;
       pool.sort(function (a, b) { return comparePointGap(a, b, gap); });
-      return { established: established, cap: cap, tagCounts: tagCounts, items: pool.slice(0, 12) };
+      return { established: established, cap: cap, tagCounts: tagCounts, items: pool.slice(0, limit) };
     }
     items.sort(function (a, b) {
       if (a.tier !== b.tier) return a.tier - b.tier;
       if (a.rating !== b.rating) return a.rating - b.rating;
       return a.map.name < b.map.name ? -1 : a.map.name > b.map.name ? 1 : 0;
     });
-    return { established: established, cap: cap, tagCounts: tagCounts, items: items.slice(0, 12) };
+    return { established: established, cap: cap, tagCounts: tagCounts, items: items.slice(0, limit) };
   }
 
   function compareSuggested(a, b, jumpClass, goal) {
@@ -851,6 +882,7 @@
     rankGroupName: rankGroupName,
     rankTitle: rankTitle,
     nextRankStep: nextRankStep,
+    rankChoices: rankChoices,
     isHighestRankGroup: isHighestRankGroup,
     rankGroupCutoff: rankGroupCutoff,
     rankBoundary: rankBoundary,

@@ -96,6 +96,13 @@ var fourthStep = TF2.nextRankStep(2000);
 assert("plebeian iv next number is plebeian iii", TF2.rankTitle(2000).label === "Plebeian IV" && fourthStep.label === "Plebeian III" && fourthStep.maxRank === 1900 && fourthStep.belowRank === 1901);
 assert("peon next number is peasant v", TF2.nextRankStep(5001).label === "Peasant V" && TF2.nextRankStep(5001).maxRank === 5000);
 assert("emperor has no next number", TF2.nextRankStep(1) === null);
+var choices = TF2.rankChoices();
+var jesterFive = choices.filter(function (choice) { return choice.label === "Jester V"; })[0];
+var plebeianFour = choices.filter(function (choice) { return choice.label === "Plebeian IV"; })[0];
+assert("every numbered title can be chosen", choices.length === 60 && choices[0].label === "Emperor" && choices[0].maxRank === 1);
+assert("jester v is rank 1000", jesterFive.minRank === 901 && jesterFive.maxRank === 1000 && jesterFive.belowRank === 1001);
+assert("plebeian iv can be the points target", plebeianFour.minRank === 1901 && plebeianFour.maxRank === 2200);
+assert("peon is not a points target", choices.every(function (choice) { return choice.label !== "Peon"; }));
 assert("a gendered title uses the same group", TF2.nextRankGroup("Baroness").title === "Count");
 assert("cutoff is the worst rank inside the next group", TF2.rankGroupCutoff([
   { rank: 999, points: 3200, name: "hidden" },

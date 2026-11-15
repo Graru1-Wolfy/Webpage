@@ -17,6 +17,8 @@
   var lookupToken = 0;
   var groupTarget = null;
   var groupToken = 0;
+  var listMode = "catalog";
+  var titleChoice = null;
   var searchResults = [];
 
   var classBar = document.getElementById("jump-class");
@@ -31,12 +33,16 @@
   var recommendForm = document.getElementById("recommend-form");
   var recommendStatus = document.getElementById("recommend-status");
   var recommendPicks = document.getElementById("recommend-picks");
-  var recommendResults = document.getElementById("recommend-results");
   var recommendRefine = document.getElementById("recommend-refine");
   var suggestCap = document.getElementById("suggest-cap");
   var suggestTags = document.getElementById("suggest-tags");
   var suggestCapLabel = document.getElementById("suggest-cap-label");
   var goalBar = document.getElementById("recommend-goal");
+  var playerTools = document.getElementById("player-tools");
+  var playerDetail = document.getElementById("player-detail");
+  var listBar = document.getElementById("list-mode");
+  var titleTarget = document.getElementById("title-target");
+  var titleLabel = document.getElementById("title-target-label");
 
   try {
     var savedView = localStorage.getItem("tf2-map-view");
@@ -50,9 +56,8 @@
     if (!button) return;
     jumpClass = button.getAttribute("data-class");
     shown = 24;
-    renderMaps();
     if (playerStats) loadGroupTarget();
-    else renderSuggestions();
+    renderMaps();
   });
   tierBar.addEventListener("click", function (event) {
     var button = event.target.closest("[data-tier]");
@@ -89,14 +94,29 @@
     var button = event.target.closest("[data-goal]");
     if (!button) return;
     goal = button.getAttribute("data-goal");
-    renderSuggestions();
+    shown = 24;
+    if (playerStats) loadGroupTarget();
+    else renderMaps();
+  });
+  listBar.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-list]");
+    if (!button) return;
+    listMode = button.getAttribute("data-list") === "catalog" ? "catalog" : "suggested";
+    shown = 24;
+    renderMaps();
+  });
+  titleTarget.addEventListener("change", function () {
+    var value = Number(titleTarget.value);
+    titleChoice = titleTarget.value && isFinite(value) ? value : null;
+    shown = 24;
+    if (playerStats) loadGroupTarget();
   });
   suggestCap.addEventListener("click", function (event) {
     var button = event.target.closest("[data-cap]");
     if (!button) return;
     var value = button.getAttribute("data-cap");
     tierChoice = value === "auto" ? null : Number(value);
-    renderSuggestions();
+    renderMaps();
   });
   suggestTags.addEventListener("click", function (event) {
     var button = event.target.closest("[data-tag]");
@@ -105,7 +125,7 @@
     if (!tag) return;
     if (selectedTags[tag]) delete selectedTags[tag];
     else selectedTags[tag] = true;
-    renderSuggestions();
+    renderMaps();
   });
   recommendForm.addEventListener("submit", function (event) {
     event.preventDefault();
@@ -117,7 +137,7 @@
     recordsState = "idle";
     lookupToken += 1;
     searchResults = [];
-    renderSuggestions();
+    renderMaps();
     if (query.length < 2) {
       recommendStatus.textContent = "Enter at least two characters of a Tempus player name.";
       return;
@@ -154,11 +174,9 @@
   });
 
   renderMaps();
-  renderSuggestions();
   TF2.loadTempus({ maps: true }).then(function () {
     setStatus();
     renderMaps();
-    renderSuggestions();
   });
 
   function choosePlayer(player) {
@@ -167,9 +185,12 @@
     playerStats = null;
     clearPlaza();
     recordsState = "loading";
+    listMode = "suggested";
     var token = ++lookupToken;
     renderPicks();
     recommendStatus.textContent = "Loading the Tempus profile and finished maps for " + player.name + ".";
+    playerDetail.textContent = "";
+    renderMaps();
     TF2.loadPlazaRecords(player.id).then(function (payload) {
       if (token !== lookupToken) return;
       playerRecords = payload.records;
@@ -177,12 +198,11 @@
       plazaRanks = payload.ranks || null;
       recordsState = "ready";
       renderMaps();
-      renderSuggestions();
     }).catch(function () {
       if (token !== lookupToken) return;
       playerRecords = null;
       recordsState = "failed";
-      renderSuggestions();
+      renderMaps();
     });
     TF2.wait(1100).then(function () {
       return TF2.loadJson("https://tempus2.xyz/api/v0/players/id/" + player.id + "/stats", 15000);
@@ -227,13 +247,25 @@
     });
   }
 
+  function useSuggestions() {
+    return listMode === "suggested" && !!(selectedPlayer && playerStats);
+  }
+
   function renderMaps() {
+    syncPlayerChrome();
     Array.prototype.forEach.call(classBar.querySelectorAll("[data-class]"), function (button) {
       button.setAttribute("aria-pressed", button.getAttribute("data-class") === jumpClass ? "true" : "false");
     });
     Array.prototype.forEach.call(viewBar.querySelectorAll("[data-view]"), function (button) {
       button.setAttribute("aria-pressed", button.getAttribute("data-view") === mapView ? "true" : "false");
     });
+    if (useSuggestions()) {
+      tierBar.hidden = true;
+      renderSuggestions();
+      return;
+    }
+    tierBar.hidden = false;
+    recommendRefine.hidden = true;
     var maps = TF2.catalog.maps;
     var tierFocus = TF2.focusedValue(tierBar, "data-tier");
     var tiers = [
@@ -275,17 +307,27 @@
     results.hidden = tableMode;
     tableWrap.hidden = !tableMode;
     results.className = mapView === "list" ? "map-list" : "map-grid";
-    if (!tableMode) results.innerHTML = slice.map(cardHtml).join("");
-    rows.innerHTML = slice.map(rowHtml).join("");
+    if (!tableMode) {
+      results.innerHTML = slice.map(function (map) { return cardHtml(map, catalogNote(map)); }).join("");
+    }
+    rows.innerHTML = slice.map(function (map) { return rowHtml(map, catalogNote(map)); }).join("");
+  }
+
+  function catalogNote(map) {
+    if (recordsState !== "ready" || !selectedPlayer) return "";
+    var finished = TF2.finishedMapNames(playerRecords, jumpClass);
+    return finished[map.name] ? "Finished" : "";
   }
 
   function clearPlaza() {
     playerRecords = null;
     plazaRanks = null;
     tierChoice = null;
+    titleChoice = null;
     selectedTags = Object.create(null);
     groupTarget = null;
     groupToken += 1;
+    listMode = "catalog";
     rememberPlaza([]);
   }
 
@@ -313,21 +355,24 @@
   function loadGroupTarget() {
     var title = currentRankTitle();
     var rank = classRankNumber();
-    var next = rank ? TF2.nextRankStep(rank) : TF2.nextRankGroup(title);
+    var chosen = goal === "points" && titleChoice
+      ? TF2.rankChoices().filter(function (choice) { return choice.maxRank === titleChoice; })[0]
+      : null;
+    var next = chosen || (rank ? TF2.nextRankStep(rank) : TF2.nextRankGroup(title));
     var token = ++groupToken;
     if (!title && !rank) {
       groupTarget = null;
-      renderSuggestions();
+      renderMaps();
       return;
     }
     if (!next) {
       var known = TF2.isHighestRankGroup(title) || (rank && TF2.rankTitle(rank) && TF2.rankTitle(rank).title === "Emperor");
       groupTarget = { title: "", points: null, state: known ? "top" : "unknown" };
-      renderSuggestions();
+      renderMaps();
       return;
     }
     groupTarget = { title: next.label || next.title, points: null, state: "loading" };
-    renderSuggestions();
+    renderMaps();
     var classId = jumpClass === "demoman" ? 4 : 3;
     loadCutoff(classId, next.maxRank).then(function (boundary) {
       if (token !== groupToken) return;
@@ -340,11 +385,11 @@
         belowPoints: boundary.belowPoints,
         state: boundary.points == null ? "missing" : "ready"
       };
-      renderSuggestions();
+      renderMaps();
     }).catch(function () {
       if (token !== groupToken) return;
       groupTarget = { title: next.title, points: null, state: "missing" };
-      renderSuggestions();
+      renderMaps();
     });
   }
 
@@ -406,13 +451,14 @@
       noteLine + tagLine + "</div>" + close;
   }
 
-  function rowHtml(map) {
+  function rowHtml(map, note) {
     var page = TF2.mapPageUrl(map.name);
     var name = page
       ? '<a href="' + page + '">' + TF2.escapeHtml(map.name) + "</a>"
       : TF2.escapeHtml(map.name);
     var detail = map.authors || "";
     if (map.kind !== "rocket") detail = TF2.kindLabels[map.kind] + (detail ? " · " + detail : "");
+    if (typeof note === "string" && note) detail = note + (detail ? " · " + detail : "");
     var tags = tagsFor(map.name);
     var layout = TF2.layoutLabel(map);
     if (tags.length) layout += " · " + tags.slice(0, 3).join(" · ");
@@ -434,15 +480,36 @@
     }).join("");
   }
 
-  function renderSuggestions() {
+  function syncPlayerChrome() {
+    playerTools.hidden = !selectedPlayer;
+    goalBar.hidden = !selectedPlayer || listMode !== "suggested";
+    titleLabel.hidden = !(selectedPlayer && goal === "points" && listMode === "suggested");
     Array.prototype.forEach.call(goalBar.querySelectorAll("[data-goal]"), function (button) {
       button.setAttribute("aria-pressed", button.getAttribute("data-goal") === goal ? "true" : "false");
     });
-    if (!selectedPlayer || !playerStats) {
-      recommendResults.innerHTML = "";
-      recommendRefine.hidden = true;
-      return;
-    }
+    Array.prototype.forEach.call(listBar.querySelectorAll("[data-list]"), function (button) {
+      button.setAttribute("aria-pressed", button.getAttribute("data-list") === listMode ? "true" : "false");
+    });
+    var html = '<option value="">Next title</option>';
+    var group = "";
+    TF2.rankChoices().forEach(function (choice) {
+      if (choice.title !== group) {
+        if (group) html += "</optgroup>";
+        group = choice.title;
+        html += '<optgroup label="' + TF2.escapeHtml(group) + '">';
+      }
+      var range = choice.minRank === choice.maxRank
+        ? "rank " + choice.maxRank.toLocaleString()
+        : "ranks " + choice.minRank.toLocaleString() + "–" + choice.maxRank.toLocaleString();
+      html += '<option value="' + choice.maxRank + '">' + TF2.escapeHtml(choice.label + " · " + range) + "</option>";
+    });
+    if (group) html += "</optgroup>";
+    if (titleTarget.innerHTML !== html) titleTarget.innerHTML = html;
+    titleTarget.value = titleChoice ? String(titleChoice) : "";
+  }
+
+  function renderSuggestions() {
+    if (!selectedPlayer || !playerStats) return;
     var established = recordsState === "ready" ? TF2.establishedTier(playerRecords, jumpClass) : 0;
     if (established > 0) renderRichSuggestions(established);
     else renderBandSuggestions();
@@ -462,14 +529,13 @@
       return TF2.mapInBand(map, jumpClass, band);
     }).sort(function (a, b) {
       return TF2.compareSuggested(a, b, jumpClass, goal);
-    }).slice(0, 12);
+    });
     var tierText = band.min === band.max ? "tier " + band.min : band.max >= 99 ? "tier " + band.min + " and above" : "tiers " + band.min + "–" + band.max;
-    var profile = selectedPlayer.name + " is " + (classRank.title ? classRank.title + ", " : "") +
-      (rank ? "rank " + rank.toLocaleString() : "unranked") + " on " + classTitle();
+    var placed = shownTitle(rank) || classRank.title || "";
+    var profile = (placed ? selectedPlayer.name + " is " + placed + ", " : selectedPlayer.name + " is ") + classTitle();
     if (points != null) profile += " with " + Math.round(points).toLocaleString() + " points";
-    if (typeof completions === "number") profile += ". Map completions on the profile: " + completions.toLocaleString();
     profile += ". Suggested " + tierText + ".";
-    var caveat = " This tier band is a suggestion from the class rank and completion count. Points shown are the profile total, not a calculated reward for a map.";
+    var caveat = "This tier band is a suggestion from the class rank and completion count. Points shown are the profile total, not a calculated reward for a map.";
     if (recordsState === "ready") {
       var finishedCount = finished ? Object.keys(finished).length : 0;
       var detailed = (playerRecords || []).some(function (row) { return row && typeof row.tier === "number"; });
@@ -483,8 +549,11 @@
     } else {
       caveat += " Tempus Plaza did not return the finished maps, so a suggestion may already be completed.";
     }
-    recommendStatus.textContent = profile + caveat;
-    showSuggestionMaps(maps, function (map) { return cardHtml(map); });
+    recommendStatus.textContent = profile;
+    playerDetail.textContent = caveat;
+    var current = filters();
+    var visible = maps.filter(function (map) { return TF2.matchesMap(map, current, "all", jumpClass); });
+    paintList(visible, function () { return ""; }, "No maps in the catalog match this suggestion.", visible.length + " suggested maps");
   }
 
   function renderRichSuggestions(established) {
@@ -497,23 +566,26 @@
       plazaMaps: plazaMaps,
       maxTier: tierChoice,
       tags: Object.keys(selectedTags),
-      gap: gap
+      gap: gap,
+      limit: 1000
     });
+    var current = filters();
+    var items = result.items.filter(function (item) { return TF2.matchesMap(item.map, current, "all", jumpClass); });
     recommendRefine.hidden = false;
     renderCap(established);
     renderTagChips(result.tagCounts);
-    recommendStatus.textContent = richStatus(result, info, gap);
-    if (!result.items.length) {
-      recommendResults.className = "";
-      recommendResults.innerHTML = '<p class="empty-row">' + TF2.escapeHtml(emptySuggestion(result)) + "</p>";
+    recommendStatus.textContent = standingText(info, result);
+    playerDetail.textContent = detailText(result, info, gap);
+    if (!items.length) {
+      paintList([], function () { return ""; }, emptySuggestion(result), "0 suggested maps");
       return;
     }
-    showSuggestionMaps(result.items, function (item) {
-      var note = goal === "points" && item.points != null
+    paintList(items.map(function (item) { return item.map; }), function (map) {
+      var item = items.filter(function (entry) { return entry.map === map; })[0];
+      return goal === "points" && item && item.points != null
         ? TF2.formatPoints(item.points) + " pts · " + (item.group || "G5")
         : "";
-      return cardHtml(item.map, note);
-    });
+    }, emptySuggestion(result), items.length + " suggested maps");
   }
 
   function classStanding() {
@@ -536,13 +608,30 @@
     return groupTarget.points - info.points;
   }
 
-  function richStatus(result, info, gap) {
+  function standingText(info) {
     var label = classTitle();
     var title = shownTitle(info.rank);
     var sentence = title ? selectedPlayer.name + " is " + title + ", " + label : selectedPlayer.name + " is " + label;
     if (info.rank) sentence += " rank " + info.rank.toLocaleString();
     if (info.points != null) sentence += " with " + TF2.formatPoints(info.points) + " points on " + info.source;
     sentence += ".";
+    if (goal === "points" && groupTarget && groupTarget.state === "ready" && info.points != null) {
+      var remain = groupTarget.points - info.points;
+      sentence += remain > 0
+        ? " " + TF2.formatPoints(remain) + " points remain to reach " + groupTarget.title + "."
+        : " These points already reach " + groupTarget.title + ".";
+    } else if (goal === "points" && groupTarget && groupTarget.state === "loading") {
+      sentence += " Checking the points for " + (groupTarget.title || "the next title") + ".";
+    } else if (goal === "points" && groupTarget && groupTarget.state === "top") {
+      sentence += " Emperor is the highest title.";
+    }
+    return sentence;
+  }
+
+  function detailText(result, info, gap) {
+    var label = classTitle();
+    var title = shownTitle(info.rank);
+    var sentence = "";
     if (groupTarget && groupTarget.state === "ready" && info.points != null) {
       var remain = groupTarget.points - info.points;
       var lowerPlaced = groupTarget.belowRank ? TF2.rankTitle(groupTarget.belowRank) : null;
@@ -582,7 +671,7 @@
     }
     var finishedCount = Object.keys(TF2.finishedMapNames(playerRecords, jumpClass)).length;
     sentence += " Left out " + finishedCount.toLocaleString() + " finished " + label + " maps for this visit. This site does not keep a copy.";
-    return sentence;
+    return sentence.replace(/^\s+/, "");
   }
 
   function tierWindow(result) {
@@ -637,13 +726,24 @@
     }).join("");
   }
 
-  function showSuggestionMaps(maps, html) {
+  function paintList(maps, noteFor, emptyText, countText) {
+    count.textContent = countText;
+    var slice = maps.slice(0, shown);
+    more.hidden = slice.length >= maps.length;
     if (!maps.length) {
-      recommendResults.className = "";
-      recommendResults.innerHTML = '<p class="empty-row">No maps in the catalog match this suggestion.</p>';
+      results.hidden = false;
+      tableWrap.hidden = true;
+      results.className = "";
+      results.innerHTML = '<p class="empty-row">' + TF2.escapeHtml(emptyText) + "</p>";
+      rows.innerHTML = '<tr><td class="empty-row" colspan="4">' + TF2.escapeHtml(emptyText) + "</td></tr>";
       return;
     }
-    recommendResults.className = "map-grid";
-    recommendResults.innerHTML = maps.map(html).join("");
+    var tableMode = mapView === "table";
+    results.hidden = tableMode;
+    tableWrap.hidden = !tableMode;
+    results.className = mapView === "list" ? "map-list" : "map-grid";
+    if (!tableMode) results.innerHTML = slice.map(function (map) { return cardHtml(map, noteFor(map)); }).join("");
+    rows.innerHTML = slice.map(function (map) { return rowHtml(map, noteFor(map)); }).join("");
   }
+
 })();
