@@ -15,6 +15,8 @@
   var selectedTags = Object.create(null);
   var recordsState = "idle";
   var lookupToken = 0;
+  var groupTarget = null;
+  var groupToken = 0;
   var searchResults = [];
 
   var classBar = document.getElementById("jump-class");
@@ -49,7 +51,8 @@
     jumpClass = button.getAttribute("data-class");
     shown = 24;
     renderMaps();
-    renderSuggestions();
+    if (playerStats) loadGroupTarget();
+    else renderSuggestions();
   });
   tierBar.addEventListener("click", function (event) {
     var button = event.target.closest("[data-tier]");
@@ -187,7 +190,7 @@
       if (token !== lookupToken) return;
       if (!stats || !stats.class_rank_info || !stats.player_info) throw new Error("stats");
       playerStats = stats;
-      renderSuggestions();
+      loadGroupTarget();
     }).catch(function () {
       if (token !== lookupToken) return;
       recommendStatus.textContent = "The Tempus profile did not load.";
@@ -281,7 +284,56 @@
     plazaRanks = null;
     tierChoice = null;
     selectedTags = Object.create(null);
+    groupTarget = null;
+    groupToken += 1;
     rememberPlaza([]);
+  }
+
+  function currentRankTitle() {
+    if (!playerStats || !playerStats.class_rank_info) return "";
+    var classId = jumpClass === "demoman" ? "4" : "3";
+    var info = playerStats.class_rank_info[classId] || {};
+    return typeof info.title === "string" ? info.title : "";
+  }
+
+  function loadGroupTarget() {
+    var title = currentRankTitle();
+    var next = TF2.nextRankGroup(title);
+    var token = ++groupToken;
+    if (!title) {
+      groupTarget = null;
+      renderSuggestions();
+      return;
+    }
+    if (!next) {
+      groupTarget = { title: "", points: null, state: TF2.isHighestRankGroup(title) ? "top" : "unknown" };
+      renderSuggestions();
+      return;
+    }
+    groupTarget = { title: next.title, points: null, state: "loading" };
+    renderSuggestions();
+    var classId = jumpClass === "demoman" ? 4 : 3;
+    loadCutoff(classId, next.maxRank).then(function (points) {
+      if (token !== groupToken) return;
+      groupTarget = { title: next.title, points: points, state: points == null ? "missing" : "ready" };
+      renderSuggestions();
+    }).catch(function () {
+      if (token !== groupToken) return;
+      groupTarget = { title: next.title, points: null, state: "missing" };
+      renderSuggestions();
+    });
+  }
+
+  function loadCutoff(classId, maxRank) {
+    function read(start) {
+      return TF2.loadJson("https://tempus2.xyz/api/v0/ranks/class/" + classId + "?start=" + start, 15000).then(function (data) {
+        return TF2.rankGroupCutoff(data && data.players, maxRank);
+      });
+    }
+    return read(maxRank).then(function (points) {
+      if (points != null || maxRank <= 1) return points;
+      return read(Math.max(1, maxRank - 49));
+    });
   }
 
   function rememberPlaza(list) {
@@ -403,7 +455,7 @@
 
   function renderRichSuggestions(established) {
     var info = classStanding();
-    var gap = TF2.pointsGap(plazaRanks, jumpClass);
+    var gap = groupGap(info);
     var result = TF2.selectSuggestions(TF2.catalog.maps || [], {
       jumpClass: jumpClass,
       goal: goal,
@@ -434,33 +486,42 @@
     var key = jumpClass === "demoman" ? "demoman" : "soldier";
     var plaza = plazaRanks && plazaRanks[key];
     if (plaza && typeof plaza.rank === "number" && typeof plaza.points === "number") {
-      return { rank: plaza.rank, points: plaza.points, next: typeof plaza.next_points === "number" ? plaza.next_points : null, source: "Tempus Plaza" };
+      return { rank: plaza.rank, points: plaza.points, source: "Tempus Plaza" };
     }
     var classId = jumpClass === "demoman" ? "4" : "3";
     var classRank = playerStats.class_rank_info[classId] || {};
     return {
       rank: typeof classRank.rank === "number" ? classRank.rank : null,
       points: typeof classRank.points === "number" ? classRank.points : null,
-      next: null,
       source: "the Tempus profile"
     };
   }
 
+  function groupGap(info) {
+    if (!groupTarget || groupTarget.state !== "ready" || typeof groupTarget.points !== "number" || info.points == null) return null;
+    return groupTarget.points - info.points;
+  }
+
   function richStatus(result, info, gap) {
     var label = classTitle();
-    var sentence = selectedPlayer.name + " is " + label;
+    var title = currentRankTitle();
+    var sentence = title ? selectedPlayer.name + " is " + title + ", " + label : selectedPlayer.name + " is " + label;
     if (info.rank) sentence += " rank " + info.rank.toLocaleString();
     if (info.points != null) sentence += " with " + TF2.formatPoints(info.points) + " points on " + info.source;
     sentence += ".";
-    if (info.next != null && info.points != null) {
-      var remain = info.next - info.points;
+    if (groupTarget && groupTarget.state === "ready" && info.points != null) {
+      var remain = groupTarget.points - info.points;
       sentence += remain > 0
-        ? " The next " + label + " rank on the Plaza points table has " + TF2.formatPoints(info.next) + " points, so " + TF2.formatPoints(remain) + " points remain."
-        : " The next listed " + label + " total is " + TF2.formatPoints(info.next) + " points.";
-    } else if (info.rank === 1 && info.source === "Tempus Plaza") {
-      sentence += " This is the top " + label + " rank on the Plaza points table.";
-    } else if (info.source === "Tempus Plaza") {
-      sentence += " The points for the next " + label + " rank were not available.";
+        ? " The next rank group is " + groupTarget.title + ", at " + TF2.formatPoints(groupTarget.points) + " points, so " + TF2.formatPoints(remain) + " points remain."
+        : " The next rank group is " + groupTarget.title + ", and these points already reach it.";
+    } else if (groupTarget && groupTarget.state === "top") {
+      sentence += " Emperor is the highest rank group.";
+    } else if (groupTarget && groupTarget.state === "unknown") {
+      sentence += " The next rank group for this title was not recognized.";
+    } else if (groupTarget && groupTarget.state === "missing") {
+      sentence += " The next rank group is " + groupTarget.title + ". The points for that group were not available.";
+    } else if (groupTarget && groupTarget.state === "loading") {
+      sentence += " Checking the points for the next rank group.";
     }
     var usual = TF2.usualGroup(playerRecords, jumpClass);
     sentence += " Finished " + label + " maps put the comfortable tier at " + result.established + (usual ? ", and the usual group is " + usual : "") + ".";
@@ -470,8 +531,10 @@
     }
     if (goal === "points") {
       sentence += " Point values use the Tempus Plaza calculator for the usual group on that tier. A tier with no finish yet is counted as G5, which is completion points only.";
-      if (gap > 0 && result.items.length && result.items.every(function (item) { return item.tier <= result.established; })) {
+      if (gap > 0 && result.items.length && result.items.every(function (item) { return item.tier <= result.established && item.points >= gap; })) {
         sentence += " These maps can cover the " + TF2.formatPoints(gap) + " points at the comfortable tier.";
+      } else if (gap > 0 && result.items.length) {
+        sentence += " These maps stay inside the tier limit and do not cover the full gap to the next rank group.";
       }
     }
     var finishedCount = Object.keys(TF2.finishedMapNames(playerRecords, jumpClass)).length;

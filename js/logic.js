@@ -488,6 +488,70 @@
     return row.next_points - row.points;
   }
 
+  // Absolute Tempus class ranks, the same cutoffs for Soldier and Demoman.
+  // Checked against the live class rank list on 2026-11-15. The in-game
+  // roman numeral is a subdivision inside the group; the API title is the group.
+  var rankGroups = [
+    { title: "Emperor", maxRank: 1 },
+    { title: "King", maxRank: 2 },
+    { title: "Archduke", maxRank: 3 },
+    { title: "Lord", maxRank: 4 },
+    { title: "Duke", maxRank: 5 },
+    { title: "Prince", maxRank: 10 },
+    { title: "Earl", maxRank: 15 },
+    { title: "Sir", maxRank: 20 },
+    { title: "Count", maxRank: 25 },
+    { title: "Baron", maxRank: 50 },
+    { title: "Knight", maxRank: 100 },
+    { title: "Noble", maxRank: 200 },
+    { title: "Esquire", maxRank: 500 },
+    { title: "Jester", maxRank: 1000 },
+    { title: "Plebeian", maxRank: 2500 },
+    { title: "Peasant", maxRank: 5000 },
+    { title: "Peon", maxRank: 0 }
+  ];
+
+  var rankGroupAliases = {
+    Empress: "Emperor",
+    Queen: "King",
+    Duchess: "Duke",
+    Princess: "Prince",
+    Gearl: "Earl",
+    Countess: "Count",
+    Baroness: "Baron",
+    Noblewoman: "Noble"
+  };
+
+  function rankGroupIndex(title) {
+    var name = String(title || "").trim().replace(/\s+(?:I|II|III|IV|V)$/, "");
+    name = rankGroupAliases[name] || name;
+    for (var i = 0; i < rankGroups.length; i++) {
+      if (rankGroups[i].title === name) return i;
+    }
+    return -1;
+  }
+
+  function nextRankGroup(title) {
+    var index = rankGroupIndex(title);
+    if (index <= 0) return null;
+    var next = rankGroups[index - 1];
+    return { title: next.title, maxRank: next.maxRank };
+  }
+
+  function isHighestRankGroup(title) {
+    return rankGroupIndex(title) === 0;
+  }
+
+  function rankGroupCutoff(players, maxRank) {
+    var match = null;
+    (players || []).forEach(function (player) {
+      if (!player || typeof player.rank !== "number" || typeof player.points !== "number") return;
+      if (player.rank > maxRank) return;
+      if (!match || player.rank > match.rank) match = player;
+    });
+    return match ? match.points : null;
+  }
+
   function mapTagNames(info, jumpClass) {
     if (!info || !Array.isArray(info.tags)) return [];
     var allowed = jumpClass === "demoman"
@@ -705,6 +769,9 @@
     typicalPlacement: typicalPlacement,
     usualGroup: usualGroup,
     pointsGap: pointsGap,
+    nextRankGroup: nextRankGroup,
+    isHighestRankGroup: isHighestRankGroup,
+    rankGroupCutoff: rankGroupCutoff,
     mapTagNames: mapTagNames,
     selectSuggestions: selectSuggestions,
     classLabel: classLabel,

@@ -68,6 +68,24 @@ assert("automatic points cap is two tiers up", TF2.tierCap(3, "points", null) ==
 assert("automatic practice cap stays put", TF2.tierCap(3, "practice", null) === 3);
 assert("chosen tier overrides the cap", TF2.tierCap(3, "points", 4) === 4);
 assert("next rank gap", TF2.formatPoints(TF2.pointsGap({ soldier: { rank: 1174, points: 2447.73, next_points: 2450.66 } }, "soldier")) === "2.93");
+var plebeian = TF2.nextRankGroup("Plebeian");
+assert("plebeian next group is jester", plebeian.title === "Jester" && plebeian.maxRank === 1000);
+assert("baron next group is count", TF2.nextRankGroup("Baron").title === "Count" && TF2.nextRankGroup("Baron").maxRank === 25);
+assert("knight next group is baron", TF2.nextRankGroup("Knight").title === "Baron" && TF2.nextRankGroup("Knight").maxRank === 50);
+assert("emperor has no next group", TF2.nextRankGroup("Emperor") === null && TF2.isHighestRankGroup("Emperor") === true);
+assert("an unknown title is not a group", TF2.nextRankGroup("NotATitle") === null && TF2.isHighestRankGroup("NotATitle") === false);
+assert("peon next group is peasant", TF2.nextRankGroup("Peon").title === "Peasant" && TF2.nextRankGroup("Peon").maxRank === 5000);
+assert("a roman numeral stays in its group", TF2.nextRankGroup("Plebeian IV").title === "Jester");
+assert("a gendered title uses the same group", TF2.nextRankGroup("Baroness").title === "Count");
+assert("cutoff is the worst rank inside the next group", TF2.rankGroupCutoff([
+  { rank: 999, points: 3200, name: "hidden" },
+  { rank: 1000, points: 3149, name: "hidden" },
+  { rank: 1001, points: 3148, name: "hidden" }
+], 1000) === 3149);
+assert("a skipped rank uses the last rank still inside the group", TF2.rankGroupCutoff([
+  { rank: 998, points: 10 },
+  { rank: 1001, points: 9 }
+], 1000) === 10);
 var catalog = [
   { name: "jump_done", s: 3, sr: 4 },
   { name: "jump_a", s: 8, sr: 1 },
@@ -124,6 +142,18 @@ var grouped = TF2.selectSuggestions([{ name: "jump_new", s: 3, sr: 1 }], {
   gap: 2.93
 });
 assert("usual group changes the calculator", grouped.items[0].group === "G1" && grouped.items[0].points === 55);
+var towardGroup = TF2.selectSuggestions(catalog, {
+  jumpClass: "soldier",
+  goal: "points",
+  records: tierRecords,
+  plazaMaps: plazaMaps,
+  maxTier: null,
+  tags: [],
+  gap: 700
+});
+assert("a rank group gap stays one tier above comfortable", towardGroup.items.length && towardGroup.items.every(function (item) {
+  return item.tier <= 4;
+}) && towardGroup.items[0].map.name === "jump_c" && towardGroup.items[0].points === 10);
 
 var academy = TF2.describeServer({
   name: "jumpacademy.tf | S4-D4 | US East",
