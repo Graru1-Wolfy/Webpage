@@ -74,6 +74,10 @@ function finishedRuns(rows) {
     if (typeof row.duration !== "number") continue;
     if (typeof row.map_name !== "string" || !/^[A-Za-z0-9_]+$/.test(row.map_name)) continue;
     var placement = wholeNumber(row.placement, 1, 15);
+    var duration = typeof row.duration === "number" && isFinite(row.duration) && row.duration >= 0 && row.duration < 100000
+      ? row.duration
+      : null;
+    if (duration == null) continue;
     records.push({
       map: row.map_name,
       class: row.class,
@@ -83,7 +87,8 @@ function finishedRuns(rows) {
       placement: placement,
       group: groupName(placement),
       bottom: typeof row.rank === "number" && typeof row.completion_count === "number" && row.rank === row.completion_count,
-      points: pointsNumber(row.points)
+      points: pointsNumber(row.points),
+      duration: duration
     });
   }
   return records;
@@ -104,14 +109,24 @@ function publicMaps(rows) {
       var tagClass = tag.class === "soldier" || tag.class === "demoman" || tag.class === "both" || tag.class === "extra" ? tag.class : "";
       tags.push(tagClass ? { name: name, class: tagClass } : { name: name });
     }
-    maps.push({
+    var entry = {
       name: map.name,
       soldier_tier: wholeNumber(map.soldier_tier, 1, 10),
       demoman_tier: wholeNumber(map.demoman_tier, 1, 10),
       soldier_rating: wholeNumber(map.soldier_rating, 1, 4),
       demoman_rating: wholeNumber(map.demoman_rating, 1, 4),
       tags: tags
-    });
+    };
+    var id = wholeNumber(map.id, 1, 10000000);
+    if (id) entry.id = id;
+    var groups = ["1", "2", "3", "4"];
+    for (var g = 0; g < groups.length; g++) {
+      var soldierCut = wholeNumber(map["soldier_group_" + groups[g] + "_cutoff"], 1, 10000000);
+      var demomanCut = wholeNumber(map["demoman_group_" + groups[g] + "_cutoff"], 1, 10000000);
+      if (soldierCut) entry["soldier_g" + groups[g]] = soldierCut;
+      if (demomanCut) entry["demoman_g" + groups[g]] = demomanCut;
+    }
+    maps.push(entry);
   }
   return maps;
 }
@@ -145,6 +160,62 @@ async function readJson(fetchImpl, url, limit) {
   }
 }
 
+function groupCuts(raw) {
+  var body;
+  try {
+    body = JSON.parse(raw);
+  } catch (error) {
+    return null;
+  }
+  var jumpClass = body && (body.class === "soldier" || body.class === "demoman") ? body.class : "";
+  var list = body && Array.isArray(body.cuts) ? body.cuts : null;
+  if (!jumpClass || !list) return null;
+  var cuts = [];
+  var seen = Object.create(null);
+  for (var i = 0; i < list.length && cuts.length < 40; i++) {
+    var row = list[i];
+    var id = wholeNumber(row && row.id, 1, 10000000);
+    var rank = wholeNumber(row && row.rank, 1, 10000000);
+    if (!id || !rank) continue;
+    var key = id + ":" + rank;
+    if (seen[key]) continue;
+    seen[key] = true;
+    cuts.push({ id: id, rank: rank });
+  }
+  return { class: jumpClass, cuts: cuts };
+}
+
+async function groupTimes(fetchImpl, raw, origin) {
+  var parsed = groupCuts(raw);
+  if (!parsed) return reply({ error: "Expected group cutoffs." }, 400, origin);
+  var times = [];
+  var index = 0;
+  async function next() {
+    while (index < parsed.cuts.length) {
+      var cut = parsed.cuts[index++];
+      var data = await readJson(
+        fetchImpl,
+        PLAZA + "maps/" + cut.id + "/null/records/" + parsed.class + "/" + (cut.rank - 1) + "/6",
+        100000
+      );
+      if (!Array.isArray(data)) continue;
+      var duration = null;
+      for (var i = 0; i < data.length; i++) {
+        var row = data[i];
+        if (!row || row.rank !== cut.rank || typeof row.duration !== "number" || !isFinite(row.duration)) continue;
+        duration = row.duration;
+        break;
+      }
+      if (duration == null) continue;
+      times.push({ id: cut.id, rank: cut.rank, duration: duration });
+    }
+  }
+  var workers = [];
+  for (var n = 0; n < 6; n++) workers.push(next());
+  await Promise.all(workers);
+  return reply({ times: times }, 200, origin);
+}
+
 async function nextPoints(fetchImpl, rank, classIndex) {
   if (typeof rank !== "number" || rank <= 1) return null;
   var offset = Math.floor(rank) - 2;
@@ -168,7 +239,7 @@ export async function handleRequest(request, fetchImpl) {
   }
   if (request.method !== "POST") return reply({ error: "Method not allowed." }, 405, origin);
   var path = new URL(request.url).pathname;
-  if (path !== "/player-records") return reply({ error: "Not found." }, 404, origin);
+  if (path !== "/player-records" && path !== "/group-times") return reply({ error: "Not found." }, 404, origin);
   if (!allowed) return reply({ error: "Origin not allowed." }, 403, "");
 
   var raw;
@@ -176,6 +247,10 @@ export async function handleRequest(request, fetchImpl) {
     raw = await request.text();
   } catch (error) {
     return reply({ error: "Expected a player id." }, 400, origin);
+  }
+  if (path === "/group-times") {
+    if (raw.length > 4000) return reply({ error: "Expected group cutoffs." }, 400, origin);
+    return groupTimes(fetchImpl, raw, origin);
   }
   if (raw.length > 64) return reply({ error: "Expected a player id." }, 400, origin);
   var id = "";

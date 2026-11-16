@@ -416,6 +416,42 @@
     return "";
   }
 
+  function nextGroupStep(placement) {
+    var current = Math.floor(Number(placement));
+    var next = current === 15 ? 14 : current === 14 ? 13 : current === 13 ? 12 : current === 12 ? 11 : 0;
+    if (!next) return null;
+    return { placement: next, group: groupName(next) };
+  }
+
+  function groupPointGain(record) {
+    if (!record) return null;
+    var next = nextGroupStep(record.placement);
+    if (!next || typeof record.points !== "number") return null;
+    var type = record.type === "course" || record.type === "bonus" ? record.type : "map";
+    var nextPoints = plazaPoints(type, record.tier, record.rating, next.placement);
+    if (nextPoints == null) return null;
+    var gain = Math.round((nextPoints - record.points) * 100) / 100;
+    if (!(gain > 0)) return null;
+    return { group: next.group, placement: next.placement, points: nextPoints, gain: gain };
+  }
+
+  function formatTimeLeft(seconds) {
+    if (typeof seconds !== "number" || !isFinite(seconds) || seconds <= 0) return "";
+    var text = formatDuration(seconds);
+    return text.indexOf(":") === -1 ? text + "s" : text;
+  }
+
+  function closeGroupImprovements(items, cap) {
+    var limit = Math.floor(Number(cap));
+    if (!(limit >= 1)) limit = 10;
+    return (items || []).filter(function (item) {
+      return item && item.timeLeft > 0 && item.timeLeft <= 2 && item.gain > 0 && item.tier >= 1 && item.tier <= limit;
+    }).sort(function (a, b) {
+      if (a.timeLeft !== b.timeLeft) return a.timeLeft - b.timeLeft;
+      return b.gain - a.gain;
+    });
+  }
+
   function formatPoints(value) {
     if (typeof value !== "number" || !isFinite(value)) return "";
     var rounded = Math.round(value * 100) / 100;
@@ -748,6 +784,7 @@
     });
     var gap = typeof options.gap === "number" ? options.gap : null;
     var limit = typeof options.limit === "number" ? options.limit : 12;
+    var improvements = goal === "points" && gap != null && gap > 0 ? closeGroupImprovements(options.improvements, cap) : [];
     if (goal === "points" && gap != null && gap > 0) {
       var comfortable = items.filter(function (item) {
         return item.tier <= established && item.points != null && item.points >= gap;
@@ -758,14 +795,27 @@
       }
       if (!pool.length) pool = items;
       pool.sort(function (a, b) { return comparePointGap(a, b, gap); });
-      return { established: established, cap: cap, tagCounts: tagCounts, items: pool.slice(0, limit) };
+      return { established: established, cap: cap, tagCounts: tagCounts, items: mergeImprovements(improvements, pool).slice(0, limit) };
     }
     items.sort(function (a, b) {
       if (a.tier !== b.tier) return a.tier - b.tier;
       if (a.rating !== b.rating) return a.rating - b.rating;
       return a.map.name < b.map.name ? -1 : a.map.name > b.map.name ? 1 : 0;
     });
-    return { established: established, cap: cap, tagCounts: tagCounts, items: items.slice(0, limit) };
+    return { established: established, cap: cap, tagCounts: tagCounts, items: mergeImprovements(improvements, items).slice(0, limit) };
+  }
+
+  function mergeImprovements(improvements, items) {
+    if (!improvements.length) return items;
+    var seen = Object.create(null);
+    var merged = [];
+    improvements.concat(items).forEach(function (item) {
+      var name = item && item.map && item.map.name;
+      if (!name || seen[name]) return;
+      seen[name] = true;
+      merged.push(item);
+    });
+    return merged;
   }
 
   function compareSuggested(a, b, jumpClass, goal) {
@@ -872,6 +922,10 @@
     compareSuggested: compareSuggested,
     plazaPoints: plazaPoints,
     groupName: groupName,
+    nextGroupStep: nextGroupStep,
+    groupPointGain: groupPointGain,
+    formatTimeLeft: formatTimeLeft,
+    closeGroupImprovements: closeGroupImprovements,
     formatPoints: formatPoints,
     establishedTier: establishedTier,
     tierCap: tierCap,

@@ -191,6 +191,29 @@ var towardGroup = TF2.selectSuggestions(catalog, {
 assert("a rank group gap stays one tier above comfortable", towardGroup.items.length && towardGroup.items.every(function (item) {
   return item.tier <= 4;
 }) && towardGroup.items[0].map.name === "jump_c" && towardGroup.items[0].points === 10);
+var g5Gain = TF2.groupPointGain({ type: "map", tier: 5, rating: 1, placement: 15, points: 25 });
+var g2Gain = TF2.groupPointGain({ type: "map", tier: 5, rating: 1, placement: 12, points: 45 });
+assert("the next group after g5 is g4", g5Gain.group === "G4" && g5Gain.gain === 2);
+assert("the next group after g2 is g1", g2Gain.group === "G1" && g2Gain.gain === 30);
+assert("g1 has no next group", TF2.nextGroupStep(11) === null && TF2.groupPointGain({ type: "map", tier: 5, rating: 1, placement: 11, points: 75 }) === null);
+assert("a typed time stays exact", TF2.formatTimeLeft(0.145) === "0.145s" && TF2.formatTimeLeft(65.5) === "1:05.5");
+var closeTimes = TF2.closeGroupImprovements([
+  { timeLeft: 0.4, gain: 30, tier: 4 },
+  { timeLeft: 3, gain: 80, tier: 4 },
+  { timeLeft: 0.2, gain: 2, tier: 9 }
+], 6);
+assert("a close group time stays inside the tier cap", closeTimes.length === 1 && closeTimes[0].timeLeft === 0.4);
+var withImprovement = TF2.selectSuggestions(catalog, {
+  jumpClass: "soldier",
+  goal: "points",
+  records: tierRecords,
+  plazaMaps: plazaMaps,
+  maxTier: null,
+  tags: [],
+  gap: 2.93,
+  improvements: [{ map: { name: "jump_done" }, tier: 3, gain: 2, timeLeft: 0.4, group: "G4", improve: true }]
+});
+assert("a close finish is suggested before a new map", withImprovement.items[0].map.name === "jump_done" && withImprovement.items[0].improve === true && withImprovement.items[1].map.name === "jump_a");
 
 var academy = TF2.describeServer({
   name: "jumpacademy.tf | S4-D4 | US East",
