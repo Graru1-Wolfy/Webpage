@@ -46,6 +46,30 @@
     });
   };
 
+  TF2.loadGroupTimes = function (jumpClass, cuts) {
+    if ((jumpClass !== "soldier" && jumpClass !== "demoman") || !Array.isArray(cuts) || !cuts.length || !TF2.plazaRelay) {
+      return Promise.resolve([]);
+    }
+    var controller = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, 20000) : null;
+    return fetch(TF2.plazaRelay.replace(/\/$/, "") + "/group-times", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=UTF-8", Accept: "application/json" },
+      body: JSON.stringify({ class: jumpClass, cuts: cuts.slice(0, 40) }),
+      cache: "no-store",
+      signal: controller ? controller.signal : undefined
+    }).then(function (response) {
+      if (timer) clearTimeout(timer);
+      if (!response.ok) throw new Error("relay");
+      return response.json();
+    }, function (error) {
+      if (timer) clearTimeout(timer);
+      throw error;
+    }).then(function (data) {
+      return data && Array.isArray(data.times) ? data.times : [];
+    });
+  };
+
   TF2.loadTempus = function (needs, onUpdate) {
     needs = needs || {};
     function notify() {

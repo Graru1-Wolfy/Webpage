@@ -19,6 +19,8 @@
   var groupToken = 0;
   var listMode = "catalog";
   var titleChoice = null;
+  var groupTimeCache = Object.create(null);
+  var groupTimeFlight = Object.create(null);
   var searchResults = [];
 
   var classBar = document.getElementById("jump-class");
@@ -202,6 +204,7 @@
       plazaRanks = payload.ranks || null;
       recordsState = "ready";
       renderMaps();
+      queueGroupTimes();
     }).catch(function () {
       if (token !== lookupToken) return;
       playerRecords = null;
@@ -309,6 +312,7 @@
     var visible = visibleMaps();
     count.textContent = visible.length + " of " + maps.length + " maps";
     var slice = visible.slice(0, shown);
+    queueGroupTimes(slice.map(function (map) { return map.name; }));
     more.hidden = slice.length >= visible.length;
     more.textContent = "Show more maps";
     if (!visible.length) {
@@ -327,9 +331,125 @@
   }
 
   function catalogNote(map) {
-    if (recordsState !== "ready" || !selectedPlayer) return "";
-    var finished = TF2.finishedMapNames(playerRecords, jumpClass);
-    return finished[map.name] ? "Finished" : "";
+    var row = finishRow(map && map.name);
+    if (!row) return "";
+    var parts = ["Finished"];
+    if (row.group) parts.push(row.group);
+    if (typeof row.points === "number") parts.push(TF2.formatPoints(row.points) + " pts");
+    var step = TF2.nextGroupStep(row.placement);
+    var left = step ? timeLeft(row, step) : null;
+    var label = left != null ? TF2.formatTimeLeft(left) : "";
+    if (step && label) parts.push(label + " to " + step.group);
+    return parts.join(" · ");
+  }
+
+  function finishRow(name) {
+    if (recordsState !== "ready" || !name || !Array.isArray(playerRecords)) return null;
+    var expected = jumpClass === "demoman" ? "demoman" : "soldier";
+    for (var i = 0; i < playerRecords.length; i++) {
+      var row = playerRecords[i];
+      if (!row || row.map !== name || row.class !== expected) continue;
+      if (row.type && row.type !== "map") continue;
+      return row;
+    }
+    return null;
+  }
+
+  function cutoffRank(info, group) {
+    if (!info || !group || group.charAt(0) !== "G") return null;
+    var key = (jumpClass === "demoman" ? "demoman_g" : "soldier_g") + group.charAt(1);
+    return typeof info[key] === "number" ? info[key] : null;
+  }
+
+  function timeLeft(row, step) {
+    if (!row || typeof row.duration !== "number") return null;
+    var info = plazaByName[row.map];
+    var rank = cutoffRank(info, step.group);
+    if (!info || typeof info.id !== "number" || rank == null) return null;
+    var cutoff = groupTimeCache[jumpClass + ":" + info.id + ":" + rank];
+    if (typeof cutoff !== "number") return null;
+    var left = row.duration - cutoff;
+    return left > 0 ? left : null;
+  }
+
+  function queueGroupTimes(names) {
+    if (recordsState !== "ready" || !Array.isArray(playerRecords)) return;
+    var preferred = Object.create(null);
+    (names || []).forEach(function (name) { preferred[name] = true; });
+    var cuts = [];
+    var seen = Object.create(null);
+    playerRecords.forEach(function (row) {
+      var step = row ? TF2.nextGroupStep(row.placement) : null;
+      var info = row ? plazaByName[row.map] : null;
+      if (!step || !finishRow(row.map) || finishRow(row.map) !== row) return;
+      var rank = cutoffRank(info, step.group);
+      if (!info || typeof info.id !== "number" || rank == null || typeof row.duration !== "number") return;
+      var key = jumpClass + ":" + info.id + ":" + rank;
+      if (seen[key] || Object.prototype.hasOwnProperty.call(groupTimeCache, key) || groupTimeFlight[key]) return;
+      seen[key] = true;
+      var gain = TF2.groupPointGain(row);
+      cuts.push({
+        id: info.id,
+        rank: rank,
+        key: key,
+        gain: gain ? gain.gain : 0,
+        preferred: !!preferred[row.map]
+      });
+    });
+    cuts.sort(function (a, b) {
+      if (a.preferred !== b.preferred) return a.preferred ? -1 : 1;
+      return b.gain - a.gain;
+    });
+    cuts = cuts.slice(0, 40);
+    if (!cuts.length) return;
+    cuts.forEach(function (cut) { groupTimeFlight[cut.key] = true; });
+    var requested = jumpClass;
+    TF2.loadGroupTimes(requested, cuts).then(function (times) {
+      var found = Object.create(null);
+      (times || []).forEach(function (row) {
+        if (!row || typeof row.id !== "number" || typeof row.rank !== "number" || typeof row.duration !== "number") return;
+        var key = requested + ":" + row.id + ":" + row.rank;
+        groupTimeCache[key] = row.duration;
+        found[key] = true;
+      });
+      cuts.forEach(function (cut) {
+        delete groupTimeFlight[cut.key];
+        if (!found[cut.key] && !Object.prototype.hasOwnProperty.call(groupTimeCache, cut.key)) groupTimeCache[cut.key] = false;
+      });
+      renderMaps();
+    }).catch(function () {
+      cuts.forEach(function (cut) {
+        delete groupTimeFlight[cut.key];
+        if (!Object.prototype.hasOwnProperty.call(groupTimeCache, cut.key)) groupTimeCache[cut.key] = false;
+      });
+    });
+  }
+
+  function pointImprovements() {
+    var catalog = Object.create(null);
+    (TF2.catalog.maps || []).forEach(function (map) {
+      if (map && map.name) catalog[map.name] = map;
+    });
+    var items = [];
+    var seen = Object.create(null);
+    playerRecords.forEach(function (row) {
+      if (!row || seen[row.map] || !catalog[row.map] || finishRow(row.map) !== row) return;
+      var gain = TF2.groupPointGain(row);
+      var step = TF2.nextGroupStep(row.placement);
+      var left = step ? timeLeft(row, step) : null;
+      if (!gain || left == null) return;
+      seen[row.map] = true;
+      items.push({
+        map: catalog[row.map],
+        tier: row.tier,
+        gain: gain.gain,
+        timeLeft: left,
+        group: gain.group,
+        points: gain.points,
+        improve: true
+      });
+    });
+    return items;
   }
 
   function clearPlaza() {
@@ -340,6 +460,8 @@
     selectedTags = Object.create(null);
     groupTarget = null;
     groupToken += 1;
+    groupTimeCache = Object.create(null);
+    groupTimeFlight = Object.create(null);
     listMode = "catalog";
     rememberPlaza([]);
   }
@@ -582,7 +704,8 @@
       maxTier: tierChoice,
       tags: Object.keys(selectedTags),
       gap: gap,
-      limit: 1000
+      limit: 1000,
+      improvements: pointImprovements()
     });
     var current = filters();
     var items = result.items.filter(function (item) { return TF2.matchesMap(item.map, current, "all", jumpClass); });
@@ -597,6 +720,10 @@
     }
     paintList(items.map(function (item) { return item.map; }), function (map) {
       var item = items.filter(function (entry) { return entry.map === map; })[0];
+      if (item && item.improve) {
+        var left = TF2.formatTimeLeft(item.timeLeft);
+        return (left ? left + " to " + item.group : item.group) + " · +" + TF2.formatPoints(item.gain) + " pts";
+      }
       return goal === "points" && item && item.points != null
         ? TF2.formatPoints(item.points) + " pts · " + (item.group || "G5")
         : "";
@@ -678,6 +805,7 @@
     }
     if (goal === "points") {
       sentence += " Point values use the Tempus Plaza calculator for the usual group on that tier. A tier with no finish yet is counted as G5, which is completion points only.";
+      sentence += " A finished time within 2 seconds of the next group, from G5 up to G1, is included with these maps.";
       if (gap > 0 && result.items.length && result.items.every(function (item) { return item.tier <= result.established && item.points >= gap; })) {
         sentence += " These maps can cover the " + TF2.formatPoints(gap) + " points at the comfortable tier.";
       } else if (gap > 0 && result.items.length) {
@@ -744,6 +872,7 @@
   function paintList(maps, noteFor, emptyText, countText) {
     count.textContent = countText;
     var slice = maps.slice(0, shown);
+    queueGroupTimes(slice.map(function (map) { return map.name; }));
     more.hidden = slice.length >= maps.length;
     if (!maps.length) {
       results.hidden = false;

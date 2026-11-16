@@ -74,10 +74,10 @@ assert("status 200", allowed.status === 200);
 assert("no store", allowed.headers.get("Cache-Control") === "private, no-store");
 assert("cors origin", allowed.headers.get("Access-Control-Allow-Origin") === "https://graru1-wolfy.github.io");
 assert("finished runs keep class group and points", JSON.stringify(payload.records) === JSON.stringify([
-  { map: "jump_beef", class: "soldier", type: "map", tier: 1, rating: 1, placement: 15, group: "G5", bottom: false, points: 1 },
-  { map: "jump_beef", class: "demoman", type: "map", tier: 1, rating: 1, placement: 1, group: "WR", bottom: false, points: 1001 },
-  { map: "jump_bottom", class: "soldier", type: "map", tier: 2, rating: 4, placement: 15, group: "G5", bottom: true, points: 2.5 },
-  { map: "jump_course", class: "soldier", type: "course", tier: 1, rating: 4, placement: 11, group: "G1", bottom: false, points: 0.5 }
+  { map: "jump_beef", class: "soldier", type: "map", tier: 1, rating: 1, placement: 15, group: "G5", bottom: false, points: 1, duration: 10 },
+  { map: "jump_beef", class: "demoman", type: "map", tier: 1, rating: 1, placement: 1, group: "WR", bottom: false, points: 1001, duration: 12 },
+  { map: "jump_bottom", class: "soldier", type: "map", tier: 2, rating: 4, placement: 15, group: "G5", bottom: true, points: 2.5, duration: 4 },
+  { map: "jump_course", class: "soldier", type: "course", tier: 1, rating: 4, placement: 11, group: "G1", bottom: false, points: 0.5, duration: 1 }
 ]));
 assert("map tags stripped", JSON.stringify(payload.maps) === JSON.stringify([{
   name: "jump_beef",
@@ -139,6 +139,32 @@ var mapsDown = await handleRequest(
 );
 var partial = await mapsDown.json();
 assert("records survive a map catalog miss", mapsDown.status === 200 && partial.records.length === 4 && partial.maps.length === 0);
+
+var timed = await handleRequest(
+  request("POST", "https://relay.example/group-times", "https://graru1-wolfy.github.io", JSON.stringify({
+    class: "soldier",
+    cuts: [{ id: 7, rank: 11 }, { id: 7, rank: 11 }, { id: "no", rank: 3 }]
+  })),
+  function (url) {
+    var target = String(url);
+    if (target !== "https://api.tempusplaza.com/maps/7/null/records/soldier/10/6") throw new Error("unexpected " + target);
+    return jsonResponse([
+      { rank: 11, duration: 40.5, name: "hidden", placement: 11 },
+      { rank: 12, duration: 41, name: "other" }
+    ]);
+  }
+);
+var times = await timed.json();
+assert("group time is the cutoff rank only", timed.status === 200 && JSON.stringify(times) === JSON.stringify({
+  times: [{ id: 7, rank: 11, duration: 40.5 }]
+}));
+assert("group time drops names", JSON.stringify(times).indexOf("hidden") === -1 && JSON.stringify(times).indexOf("other") === -1);
+
+var badGroup = await handleRequest(
+  request("POST", "https://relay.example/group-times", "https://graru1-wolfy.github.io", JSON.stringify({ class: "both", cuts: [] })),
+  function () { throw new Error("should not fetch"); }
+);
+assert("group time rejects an unknown class", badGroup.status === 400);
 
 if (!failed) console.log("relay checks passed");
 process.exitCode = failed;
