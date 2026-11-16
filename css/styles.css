@@ -1724,7 +1724,8 @@ h1.page-title {
 
 @media (max-width: 720px) {
   #recommend-goal,
-  #list-mode {
+  #list-mode,
+  #finished-mode {
     display: grid;
     width: 100%;
     overflow: visible;
@@ -1734,12 +1735,14 @@ h1.page-title {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  #list-mode {
+  #list-mode,
+  #finished-mode {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   #recommend-goal button,
-  #list-mode button {
+  #list-mode button,
+  #finished-mode button {
     width: 100%;
   }
 }

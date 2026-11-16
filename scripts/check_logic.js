@@ -143,7 +143,20 @@ var covered = TF2.selectSuggestions(catalog, {
   tags: [],
   gap: 2.93
 });
-assert("comfortable tier covers the gap", covered.items.length === 1 && covered.items[0].map.name === "jump_a" && covered.items[0].points === 5);
+assert("comfortable tier covers the gap", covered.items[0].map.name === "jump_a" && covered.items[0].points === 5 && covered.items.some(function (item) {
+  return item.map.name === "jump_done" && item.finished;
+}));
+var hiddenFinished = TF2.selectSuggestions(catalog, {
+  jumpClass: "soldier",
+  goal: "points",
+  records: tierRecords,
+  plazaMaps: plazaMaps,
+  maxTier: null,
+  tags: [],
+  gap: 2.93,
+  includeFinished: false
+});
+assert("hiding finished maps leaves them out", hiddenFinished.items.length === 1 && hiddenFinished.items[0].map.name === "jump_a");
 assert("suggestion cap", covered.established === 3 && covered.cap === 5);
 var step = TF2.selectSuggestions([
   { name: "jump_c", s: 4, sr: 4 },
@@ -168,6 +181,19 @@ var raised = TF2.selectSuggestions(catalog, {
   gap: 2.93
 });
 assert("tag filter keeps the comfortable map", raised.items.length === 1 && raised.items[0].map.name === "jump_a" && raised.items[0].tags[0] === "Wallshot");
+var wideTags = plazaMaps.concat([
+  { name: "jump_pogo", soldier_tier: 8, tags: [{ name: "Wallpogo", class: "soldier" }, { name: "Wallpogo", class: "soldier" }, { name: "Pogo", class: "demoman" }] }
+]);
+var practiceTags = TF2.selectSuggestions(catalog, {
+  jumpClass: "soldier",
+  goal: "practice",
+  records: tierRecords,
+  plazaMaps: wideTags,
+  maxTier: null,
+  tags: ["Wallpogo"]
+});
+assert("practice tags count every soldier map", practiceTags.tagCounts.Wallpogo === 1 && practiceTags.tagCounts.Wallshot === 1 && practiceTags.tagCounts.Pogo == null);
+assert("a tag outside the practice tiers stays out of the list", practiceTags.items.every(function (item) { return item.map.name !== "jump_pogo"; }));
 var groupRecords = tierRecords.map(function (row) { return Object.assign({}, row, { placement: 11 }); });
 var grouped = TF2.selectSuggestions([{ name: "jump_new", s: 3, sr: 1 }], {
   jumpClass: "soldier",

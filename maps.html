@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=20261116-1">
+    <link rel="stylesheet" href="css/styles.css?v=20261116-2">
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
@@ -69,6 +69,10 @@
         <div class="modes" id="list-mode" role="toolbar" aria-label="Which maps to show">
           <button type="button" data-list="suggested" aria-pressed="true">Suggested</button>
           <button type="button" data-list="catalog" aria-pressed="false">All maps</button>
+        </div>
+        <div class="modes" id="finished-mode" role="toolbar" aria-label="Finished maps in suggestions">
+          <button type="button" data-finished="show" aria-pressed="true">Show finished</button>
+          <button type="button" data-finished="hide" aria-pressed="false">Hide finished</button>
         </div>
         <label id="title-target-label">Desired title
           <select id="title-target" aria-label="Desired title for the points goal"></select>
@@ -158,9 +162,9 @@
         </div>
       </div>
     </footer>
-    <script src="js/logic.js?v=20261116-1"></script>
-    <script src="js/common.js?v=20261116-1"></script>
-    <script src="js/data.js?v=20261116-1"></script>
-    <script src="js/maps.js?v=20261116-1"></script>
+    <script src="js/logic.js?v=20261116-2"></script>
+    <script src="js/common.js?v=20261116-2"></script>
+    <script src="js/data.js?v=20261116-2"></script>
+    <script src="js/maps.js?v=20261116-2"></script>
   </body>
 </html>

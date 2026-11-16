@@ -19,6 +19,7 @@
   var groupToken = 0;
   var listMode = "catalog";
   var titleChoice = null;
+  var showFinished = true;
   var groupTimeCache = Object.create(null);
   var groupTimeFlight = Object.create(null);
   var searchResults = [];
@@ -43,6 +44,7 @@
   var playerTools = document.getElementById("player-tools");
   var playerDetail = document.getElementById("player-detail");
   var listBar = document.getElementById("list-mode");
+  var finishedBar = document.getElementById("finished-mode");
   var titleTarget = document.getElementById("title-target");
   var titleLabel = document.getElementById("title-target-label");
 
@@ -99,6 +101,13 @@
     shown = 24;
     if (playerStats) loadGroupTarget();
     else renderMaps();
+  });
+  if (finishedBar) finishedBar.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-finished]");
+    if (!button) return;
+    showFinished = button.getAttribute("data-finished") !== "hide";
+    shown = 24;
+    renderMaps();
   });
   listBar.addEventListener("click", function (event) {
     var button = event.target.closest("[data-list]");
@@ -620,6 +629,7 @@
     if (typeof TF2.rankChoices !== "function") return;
     playerTools.hidden = !selectedPlayer;
     goalBar.hidden = !selectedPlayer || listMode !== "suggested";
+    if (finishedBar) finishedBar.hidden = !selectedPlayer || listMode !== "suggested";
     titleLabel.hidden = !(selectedPlayer && goal === "points" && listMode === "suggested");
     Array.prototype.forEach.call(goalBar.querySelectorAll("[data-goal]"), function (button) {
       button.setAttribute("aria-pressed", button.getAttribute("data-goal") === goal ? "true" : "false");
@@ -627,6 +637,12 @@
     Array.prototype.forEach.call(listBar.querySelectorAll("[data-list]"), function (button) {
       button.setAttribute("aria-pressed", button.getAttribute("data-list") === listMode ? "true" : "false");
     });
+    if (finishedBar) {
+      Array.prototype.forEach.call(finishedBar.querySelectorAll("[data-finished]"), function (button) {
+        var showing = button.getAttribute("data-finished") !== "hide";
+        button.setAttribute("aria-pressed", showing === showFinished ? "true" : "false");
+      });
+    }
     var html = '<option value="">Next title</option>';
     var group = "";
     TF2.rankChoices().forEach(function (choice) {
@@ -662,7 +678,7 @@
     var band = TF2.suggestBand(rank, completions, goal);
     var finished = recordsState === "ready" ? TF2.finishedMapNames(playerRecords, jumpClass) : null;
     var maps = (TF2.catalog.maps || []).filter(function (map) {
-      if (finished && finished[map.name]) return false;
+      if (!showFinished && finished && finished[map.name]) return false;
       return TF2.mapInBand(map, jumpClass, band);
     }).sort(function (a, b) {
       return TF2.compareSuggested(a, b, jumpClass, goal);
@@ -676,8 +692,10 @@
     if (recordsState === "ready") {
       var finishedCount = finished ? Object.keys(finished).length : 0;
       var detailed = (playerRecords || []).some(function (row) { return row && typeof row.tier === "number"; });
-      caveat += " Left out " + finishedCount.toLocaleString() + " finished " + classTitle() +
-        " maps reported by Tempus Plaza for this visit. This site does not keep a copy.";
+      caveat += showFinished
+        ? " Finished maps stay in the suggestions until you hide them."
+        : " Left out " + finishedCount.toLocaleString() + " finished " + classTitle() + " maps for this visit.";
+      caveat += " This site does not keep a copy.";
       if (playerRecords && playerRecords.length && !detailed) {
         caveat += " The lookup did not include tier, group, or points, so this band still comes from class rank and completion count.";
       }
@@ -690,7 +708,9 @@
     playerDetail.textContent = caveat;
     var current = filters();
     var visible = maps.filter(function (map) { return TF2.matchesMap(map, current, "all", jumpClass); });
-    paintList(visible, function () { return ""; }, "No maps in the catalog match this suggestion.", visible.length + " suggested maps");
+    paintList(visible, function (map) {
+      return showFinished ? catalogNote(map) : "";
+    }, "No maps in the catalog match this suggestion.", visible.length + " suggested maps");
   }
 
   function renderRichSuggestions(established) {
@@ -705,6 +725,7 @@
       tags: Object.keys(selectedTags),
       gap: gap,
       limit: 1000,
+      includeFinished: showFinished,
       improvements: pointImprovements()
     });
     var current = filters();
@@ -724,6 +745,7 @@
         var left = TF2.formatTimeLeft(item.timeLeft);
         return (left ? left + " to " + item.group : item.group) + " · +" + TF2.formatPoints(item.gain) + " pts";
       }
+      if (item && item.finished) return catalogNote(map);
       return goal === "points" && item && item.points != null
         ? TF2.formatPoints(item.points) + " pts · " + (item.group || "G5")
         : "";
@@ -813,7 +835,10 @@
       }
     }
     var finishedCount = Object.keys(TF2.finishedMapNames(playerRecords, jumpClass)).length;
-    sentence += " Left out " + finishedCount.toLocaleString() + " finished " + label + " maps for this visit. This site does not keep a copy.";
+    sentence += showFinished
+      ? " Finished maps stay in the suggestions until you hide them."
+      : " Left out " + finishedCount.toLocaleString() + " finished " + label + " maps for this visit.";
+    sentence += " This site does not keep a copy.";
     return sentence.replace(/^\s+/, "");
   }
 
@@ -854,18 +879,14 @@
     names.sort(function (a, b) {
       return tagCounts[b] - tagCounts[a] || (a < b ? -1 : a > b ? 1 : 0);
     });
-    var shown = names.slice(0, 12);
     Object.keys(selectedTags).forEach(function (tag) {
-      if (!tagCounts || !tagCounts[tag]) {
-        delete selectedTags[tag];
-        return;
-      }
-      if (shown.indexOf(tag) === -1) shown.push(tag);
+      if (!tagCounts || !tagCounts[tag]) delete selectedTags[tag];
     });
-    suggestTags.hidden = !shown.length;
-    suggestTags.innerHTML = shown.map(function (tag) {
+    suggestTags.hidden = !names.length;
+    suggestTags.innerHTML = names.map(function (tag) {
       return '<button type="button" data-tag="' + TF2.escapeHtml(tag) + '" aria-pressed="' +
-        (selectedTags[tag] ? "true" : "false") + '">' + TF2.escapeHtml(tag) + "</button>";
+        (selectedTags[tag] ? "true" : "false") + '">' + TF2.escapeHtml(tag) +
+        " <span>" + tagCounts[tag] + "</span></button>";
     }).join("");
   }
 
