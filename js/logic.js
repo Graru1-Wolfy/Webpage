@@ -696,6 +696,19 @@
     };
   }
 
+  function mapTagCounts(maps, jumpClass) {
+    var counts = Object.create(null);
+    (maps || []).forEach(function (map) {
+      var seen = Object.create(null);
+      mapTagNames(map, jumpClass).forEach(function (tag) {
+        if (seen[tag]) return;
+        seen[tag] = true;
+        counts[tag] = (counts[tag] || 0) + 1;
+      });
+    });
+    return counts;
+  }
+
   function mapTagNames(info, jumpClass) {
     if (!info || !Array.isArray(info.tags)) return [];
     var allowed = jumpClass === "demoman"
@@ -755,20 +768,15 @@
     var floor = 1;
     if (goal === "practice") floor = Math.max(1, established - 1);
     if (goal === "improve") floor = established + 1;
+    var includeFinished = options.includeFinished !== false;
     var items = [];
-    var tagCounts = Object.create(null);
+    var tagCounts = mapTagCounts(options.plazaMaps, jumpClass);
     (catalog || []).forEach(function (map) {
-      if (!map || finished[map.name]) return;
+      if (!map || (!includeFinished && finished[map.name])) return;
       var info = plaza[map.name];
       var tier = suggestionTier(map, jumpClass, info);
-      if (!tier || tier > cap) return;
+      if (!tier || tier > cap || tier < floor) return;
       var tags = mapTagNames(info, jumpClass);
-      if (tier >= floor) {
-        tags.forEach(function (tag) {
-          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-        });
-      }
-      if (tier < floor) return;
       if (wanted.length && !wanted.some(function (tag) { return tags.indexOf(tag) !== -1; })) return;
       var rating = suggestionRating(map, jumpClass, info);
       var placement = typicalPlacement(records, jumpClass, tier);
@@ -779,23 +787,30 @@
         placement: placement,
         group: groupName(placement),
         points: plazaPoints("map", tier, rating, placement),
-        tags: tags
+        tags: tags,
+        finished: !!finished[map.name]
       });
     });
     var gap = typeof options.gap === "number" ? options.gap : null;
     var limit = typeof options.limit === "number" ? options.limit : 12;
     var improvements = goal === "points" && gap != null && gap > 0 ? closeGroupImprovements(options.improvements, cap) : [];
+    var fresh = items.filter(function (item) { return !item.finished; });
+    var done = items.filter(function (item) { return item.finished; });
+    done.sort(function (a, b) {
+      if (a.tier !== b.tier) return a.tier - b.tier;
+      return a.map.name < b.map.name ? -1 : a.map.name > b.map.name ? 1 : 0;
+    });
     if (goal === "points" && gap != null && gap > 0) {
-      var comfortable = items.filter(function (item) {
+      var comfortable = fresh.filter(function (item) {
         return item.tier <= established && item.points != null && item.points >= gap;
       });
       var pool = comfortable;
       if (!pool.length && typeof options.maxTier !== "number") {
-        pool = items.filter(function (item) { return item.tier <= Math.min(cap, established + 1); });
+        pool = fresh.filter(function (item) { return item.tier <= Math.min(cap, established + 1); });
       }
-      if (!pool.length) pool = items;
+      if (!pool.length) pool = fresh;
       pool.sort(function (a, b) { return comparePointGap(a, b, gap); });
-      return { established: established, cap: cap, tagCounts: tagCounts, items: mergeImprovements(improvements, pool).slice(0, limit) };
+      return { established: established, cap: cap, tagCounts: tagCounts, items: mergeImprovements(mergeImprovements(improvements, pool), done).slice(0, limit) };
     }
     items.sort(function (a, b) {
       if (a.tier !== b.tier) return a.tier - b.tier;
